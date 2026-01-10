@@ -1,0 +1,70 @@
+/// Modelo que representa uma página no caderno
+class NotebookPage {
+  final String id;
+  final String tabId;
+  final String title;
+  final String content; // JSON do Quill Delta
+  final int order;
+  final bool isContinuation; // New flag for overflow grouping
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  NotebookPage({
+    required this.id,
+    required this.tabId,
+    required this.title,
+    required this.content,
+    required this.order,
+    this.isContinuation = false,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'tab_id': tabId,
+      'title': title,
+      'content': content,
+      'order': order,
+      'is_continuation': isContinuation ? 1 : 0,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory NotebookPage.fromMap(Map<String, dynamic> map) {
+    return NotebookPage(
+      id: map['id'],
+      tabId: map['tab_id'],
+      title: map['title'],
+      content: map['content'],
+      order: map['order'],
+      isContinuation: map['is_continuation'] == 1,
+      createdAt: DateTime.parse(map['created_at']),
+      updatedAt: DateTime.parse(map['updated_at']),
+    );
+  }
+
+  NotebookPage copyWith({
+    String? id,
+    String? tabId,
+    String? title,
+    String? content,
+    int? order,
+    bool? isContinuation,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return NotebookPage(
+      id: id ?? this.id,
+      tabId: tabId ?? this.tabId,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      order: order ?? this.order,
+      isContinuation: isContinuation ?? this.isContinuation,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}
