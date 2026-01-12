@@ -97,6 +97,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Controller is driven by AnimatedBuilder below.
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -176,6 +178,10 @@ class _HomeScreenState extends State<HomeScreen>
                     child: AnimatedBuilder(
                       animation: _controller,
                       builder: (context, child) {
+                        // Apply Curve here
+                        final double animValue = Curves.easeInOutCubicEmphasized
+                            .transform(_controller.value);
+
                         return Stack(
                           alignment: Alignment.center,
                           children: [
@@ -192,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen>
                                       right: 0,
                                       width: bookWidthOpen, // Largura total
                                       height: bookHeight,
-                                      child: NotebookView(),
+                                      child: const NotebookView(),
                                     ),
                                   ],
                                 ),
@@ -213,11 +219,11 @@ class _HomeScreenState extends State<HomeScreen>
                                     -0.0005,
                                   ) // Perspectiva Negativa (2000px)
                                   ..rotateY(
-                                    -(_controller.value * pi),
+                                    -(animValue * pi),
                                   ), // -180 graus (pi)
                                 alignment:
                                     Alignment.centerLeft, // Pivô na lombada
-                                child: (_controller.value * pi) < (pi / 2)
+                                child: (animValue * pi) < (pi / 2)
                                     ? BookCoverView(onOpen: _openBook)
                                     : Transform(
                                         alignment: Alignment.center,
@@ -233,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen>
                                                 width:
                                                     bookWidthOpen, // Largura total
                                                 height: bookHeight,
-                                                child: NotebookView(),
+                                                child: const NotebookView(),
                                               ),
                                             ],
                                           ),
