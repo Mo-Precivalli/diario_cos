@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/notebook_provider.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 class AlphabetSidebar extends StatelessWidget {
   const AlphabetSidebar({super.key});
@@ -89,20 +89,20 @@ class _AlphabetTabState extends State<_AlphabetTab> {
           decoration: BoxDecoration(
             color: (widget.isSelected || _isHovered)
                 ? AppColors.accentGold
-                : AppColors.primaryBlue.withOpacity(0.6),
+                : AppColors.primaryBlue.withValues(alpha: 0.6),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(4),
               bottomLeft: Radius.circular(4),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 2,
                 offset: const Offset(-1, 1),
               ),
             ],
             border: Border.all(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               width: 0.5,
             ),
           ),
@@ -110,7 +110,7 @@ class _AlphabetTabState extends State<_AlphabetTab> {
             child: Text(
               widget.letter,
               style: GoogleFonts.lato(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
               ),

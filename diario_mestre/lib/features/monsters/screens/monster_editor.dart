@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/monster_model.dart';
-import '../models/notebook_page.dart';
-import '../providers/notebook_provider.dart'; // Import Provider
-import '../theme/colors.dart';
-import 'stat_block_decoration.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
+import 'package:diario_mestre/providers/notebook_provider.dart'; // Import Provider
+import 'package:diario_mestre/core/theme/colors.dart';
+import '../widgets/stat_block_decoration.dart';
 
 class MonsterEditor extends StatefulWidget {
   final NotebookPage page;
@@ -100,7 +100,7 @@ class _MonsterEditorState extends State<MonsterEditor> {
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(
-            color: AppColors.monsterSheetAccent.withOpacity(0.5),
+            color: AppColors.monsterSheetAccent.withValues(alpha: 0.5),
             width: 1,
           ), // Borda externa fina
           borderRadius: BorderRadius.circular(4),
@@ -358,10 +358,10 @@ class _MonsterEditorState extends State<MonsterEditor> {
     return Container(
       decoration: BoxDecoration(
         color: isMental
-            ? AppColors.primaryBlue.withOpacity(0.15)
+            ? AppColors.primaryBlue.withValues(alpha: 0.15)
             : const Color(0xFFF7F2E0),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
       ),
       padding: const EdgeInsets.symmetric(
         vertical: 8,
@@ -402,7 +402,7 @@ class _MonsterEditorState extends State<MonsterEditor> {
               ],
             ),
           ),
-          ...abilities.map((ability) => _buildAbilityRow(ability)).toList(),
+          ...abilities.map((ability) => _buildAbilityRow(ability)),
         ],
       ),
     );
@@ -494,7 +494,9 @@ class _MonsterEditorState extends State<MonsterEditor> {
                             color: AppColors.monsterSheetAccent,
                           ),
                           borderRadius: BorderRadius.circular(4),
-                          color: AppColors.monsterSheetAccent.withOpacity(0.1),
+                          color: AppColors.monsterSheetAccent.withValues(
+                            alpha: 0.1,
+                          ),
                         )
                       : null,
                   child: Text(
@@ -728,8 +730,9 @@ class _MonsterEditorState extends State<MonsterEditor> {
   }
 
   Widget _buildAbilitiesList(String? title, List<MonsterAbility> list) {
-    if (list.isEmpty && title == 'Traços')
+    if (list.isEmpty && title == 'Traços') {
       return _buildAddButton(list, 'Adicionar Traço');
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,7 +795,7 @@ class _MonsterEditorState extends State<MonsterEditor> {
                   initialValue: ability.description,
                   maxLines: null,
                   style: GoogleFonts.libreBaskerville(
-                    color: AppColors.textDark.withOpacity(0.9),
+                    color: AppColors.textDark.withValues(alpha: 0.9),
                   ),
                   decoration: const InputDecoration(
                     hintText: 'Descrição...',
@@ -808,7 +811,7 @@ class _MonsterEditorState extends State<MonsterEditor> {
               ],
             ),
           );
-        }).toList(),
+        }),
         _buildAddButton(list, 'Adicionar Habilidade'),
       ],
     );
@@ -880,7 +883,7 @@ class _MonsterEditorState extends State<MonsterEditor> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '$label',
+            label,
             style: GoogleFonts.libreBaskerville(
               fontWeight: FontWeight.bold,
               color: const Color(0xFF2E7D32), // Verde estilo D&D 5e

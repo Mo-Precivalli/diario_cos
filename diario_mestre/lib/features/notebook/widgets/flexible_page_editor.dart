@@ -4,7 +4,7 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'dart:convert';
 import '../models/notebook_page.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 class FlexiblePageEditor extends StatefulWidget {
   final NotebookPage page;
@@ -77,7 +77,7 @@ class _FlexiblePageEditorState extends State<FlexiblePageEditor> {
         );
       } else if (decoded is Map) {
         final doc = quill.Document()
-          ..insert(0, "Conteúdo importado:\n${decoded.toString()}");
+          ..insert(0, 'Conteúdo importado:\n${decoded.toString()}');
         _controller = quill.QuillController(
           document: doc,
           selection: const TextSelection.collapsed(offset: 0),
@@ -150,7 +150,7 @@ class _FlexiblePageEditorState extends State<FlexiblePageEditor> {
       );
       await oldWidget.onSave(updatedPage, silent: true);
     } catch (e) {
-      debugPrint("Error saving old page: $e");
+      debugPrint('Error saving old page: $e');
     }
   }
 
@@ -229,6 +229,7 @@ class _FlexiblePageEditorState extends State<FlexiblePageEditor> {
     setState(() => _isToolbarOpen = true);
   }
 
+  @override
   void dispose() {
     _autosaveTimer?.cancel();
     if (_hasChanges) _saveQuietly(silent: true);
@@ -255,7 +256,7 @@ class _FlexiblePageEditorState extends State<FlexiblePageEditor> {
       );
       await widget.onSave(updatedPage, silent: silent);
     } catch (e) {
-      debugPrint("Error saving quietly: $e");
+      debugPrint('Error saving quietly: $e');
     }
   }
 
@@ -376,7 +377,7 @@ class _FlexiblePageEditorState extends State<FlexiblePageEditor> {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 10,
             offset: const Offset(4, 4),
           ),
@@ -435,7 +436,7 @@ class _FlexiblePageEditorState extends State<FlexiblePageEditor> {
                   ),
                   Container(
                     height: 1,
-                    color: AppColors.accentGold.withOpacity(0.3),
+                    color: AppColors.accentGold.withValues(alpha: 0.3),
                     margin: const EdgeInsets.symmetric(vertical: 8),
                   ),
                   Row(
@@ -461,7 +462,7 @@ class _FlexiblePageEditorState extends State<FlexiblePageEditor> {
                                 deleteIcon: const Icon(Icons.close, size: 12),
                                 onDeleted: () => _removeTag(tag),
                                 backgroundColor: AppColors.primaryBlue
-                                    .withOpacity(0.1),
+                                    .withValues(alpha: 0.1),
                                 visualDensity: VisualDensity.compact,
                                 materialTapTargetSize:
                                     MaterialTapTargetSize.shrinkWrap,
@@ -490,7 +491,7 @@ class _FlexiblePageEditorState extends State<FlexiblePageEditor> {
                         Container(
                           width: 1,
                           height: 16,
-                          color: AppColors.textLight.withOpacity(0.5),
+                          color: AppColors.textLight.withValues(alpha: 0.5),
                           margin: const EdgeInsets.symmetric(horizontal: 8),
                         ),
                         SizedBox(
@@ -543,7 +544,9 @@ class _FlexiblePageEditorState extends State<FlexiblePageEditor> {
                   data: Theme.of(context).copyWith(
                     textSelectionTheme: TextSelectionThemeData(
                       cursorColor: AppColors.accentGold,
-                      selectionColor: AppColors.accentGold.withOpacity(0.3),
+                      selectionColor: AppColors.accentGold.withValues(
+                        alpha: 0.3,
+                      ),
                       selectionHandleColor: AppColors.accentGold,
                     ),
                   ),

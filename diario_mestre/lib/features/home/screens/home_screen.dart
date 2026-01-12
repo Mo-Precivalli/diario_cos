@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../providers/notebook_provider.dart';
+import 'package:diario_mestre/providers/notebook_provider.dart';
 import '../widgets/book_cover.dart'; // Import da capa
-import '../widgets/notebook_view.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/features/notebook/screens/notebook_view.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 import 'dart:math';
 
@@ -72,8 +72,8 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
-        backgroundColor: AppColors.background.withOpacity(
-          0.8,
+        backgroundColor: AppColors.background.withValues(
+          alpha: 0.8,
         ), // AppBar combina com a mesa
         elevation: 0,
         actions: [

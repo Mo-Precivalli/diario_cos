@@ -3,10 +3,10 @@ import 'dart:async'; // Auto-save
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'dart:convert';
 import '../models/notebook_page.dart';
-import '../providers/notebook_provider.dart';
+import 'package:diario_mestre/providers/notebook_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 class PageEditor extends StatefulWidget {
   final NotebookPage page;
@@ -131,7 +131,7 @@ class _PageEditorState extends State<PageEditor> {
       // Use silent save to avoid crashes/rebuilds during update
       await oldWidget.onSave(updatedPage, silent: true);
     } catch (e) {
-      debugPrint("Error saving old page in transition: $e");
+      debugPrint('Error saving old page in transition: $e');
     }
   }
 
@@ -246,6 +246,7 @@ class _PageEditorState extends State<PageEditor> {
     });
   }
 
+  @override
   void dispose() {
     _autosaveTimer?.cancel();
     // Force save on dispose if changes exist
@@ -279,7 +280,7 @@ class _PageEditorState extends State<PageEditor> {
       await widget.onSave(updatedPage, silent: silent);
       // No setState here as might be disposed
     } catch (e) {
-      debugPrint("Error saving quietly: $e");
+      debugPrint('Error saving quietly: $e');
     }
   }
 
@@ -355,7 +356,7 @@ class _PageEditorState extends State<PageEditor> {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 10,
             offset: const Offset(4, 4),
           ),
@@ -404,20 +405,22 @@ class _PageEditorState extends State<PageEditor> {
                               decoration: InputDecoration(
                                 hintText: 'Adventuring Notes',
                                 hintStyle: TextStyle(
-                                  color: AppColors.accentGold.withOpacity(0.3),
+                                  color: AppColors.accentGold.withValues(
+                                    alpha: 0.5,
+                                  ),
                                 ),
                                 border: UnderlineInputBorder(
                                   borderSide: BorderSide(
-                                    color: AppColors.accentGold.withOpacity(
-                                      0.5,
+                                    color: AppColors.accentGold.withValues(
+                                      alpha: 0.5,
                                     ),
                                     width: 1,
                                   ),
                                 ),
                                 enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
-                                    color: AppColors.accentGold.withOpacity(
-                                      0.2,
+                                    color: AppColors.accentGold.withValues(
+                                      alpha: 0.2,
                                     ),
                                     width: 1,
                                   ),
@@ -480,7 +483,9 @@ class _PageEditorState extends State<PageEditor> {
                   data: Theme.of(context).copyWith(
                     textSelectionTheme: TextSelectionThemeData(
                       cursorColor: AppColors.accentGold,
-                      selectionColor: AppColors.accentGold.withOpacity(0.3),
+                      selectionColor: AppColors.accentGold.withValues(
+                        alpha: 0.3,
+                      ),
                       selectionHandleColor: AppColors.accentGold,
                     ),
                   ),
@@ -572,7 +577,7 @@ class _DraggableToolbarOverlayState extends State<DraggableToolbarOverlay> {
               border: Border.all(color: AppColors.accentGold, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),

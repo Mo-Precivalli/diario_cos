@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../models/notebook_page.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class FlipCard extends StatefulWidget {
@@ -186,7 +186,7 @@ class _FlipCardState extends State<FlipCard>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(2, 4),
           ),
@@ -209,7 +209,7 @@ class _FlipCardState extends State<FlipCard>
             Image.file(File(imagePath), fit: BoxFit.fill)
           else
             Container(
-              color: AppColors.primaryBlue.withOpacity(0.1),
+              color: AppColors.primaryBlue.withValues(alpha: 0.1),
               child: const Center(
                 child: Icon(Icons.image, size: 48, color: AppColors.textLight),
               ),
@@ -227,7 +227,10 @@ class _FlipCardState extends State<FlipCard>
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                    colors: [
+                      Colors.black.withValues(alpha: 0.8),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
                 child: Text(
@@ -304,14 +307,14 @@ class _FlipCardState extends State<FlipCard>
                       maxLines: null,
                       style: GoogleFonts.lato(fontSize: 14),
                       decoration: const InputDecoration(
-                        hintText: "Descrição...",
+                        hintText: 'Descrição...',
                         border: InputBorder.none,
                       ),
                     )
                   : SingleChildScrollView(
                       child: Text(
                         _descController.text.isEmpty
-                            ? "Sem descrição."
+                            ? 'Sem descrição.'
                             : _descController.text,
                         style: GoogleFonts.lato(
                           fontSize: 14,
@@ -329,7 +332,7 @@ class _FlipCardState extends State<FlipCard>
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: widget.onDelete,
-                    tooltip: "Excluir Carta",
+                    tooltip: 'Excluir Carta',
                   ),
                   const Spacer(),
                   IconButton(

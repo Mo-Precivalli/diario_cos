@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/notebook_tab.dart';
-import '../providers/notebook_provider.dart';
-import '../theme/colors.dart'; // Import AppColors
+import 'package:diario_mestre/features/notebook/models/notebook_tab.dart';
+import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/core/theme/colors.dart'; // Import AppColors
 import 'package:google_fonts/google_fonts.dart';
 
 class TabSidebar extends StatelessWidget {
@@ -79,9 +79,9 @@ class _TabButtonState extends State<_TabButton> {
               color: widget.isActive
                   ? AppColors.accentGold
                   : (_isHovered
-                        ? AppColors.primaryBlue.withOpacity(0.9)
-                        : AppColors.primaryBlue.withOpacity(
-                            0.7,
+                        ? AppColors.primaryBlue.withValues(alpha: 0.9)
+                        : AppColors.primaryBlue.withValues(
+                            alpha: 0.7,
                           )), // Mais escuro quando inativo
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(8),
@@ -89,7 +89,7 @@ class _TabButtonState extends State<_TabButton> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: widget.isActive ? 8 : 4,
                   offset: widget.isActive
                       ? const Offset(4, 2)
@@ -97,7 +97,7 @@ class _TabButtonState extends State<_TabButton> {
                 ),
               ],
               border: Border.all(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -114,8 +114,8 @@ class _TabButtonState extends State<_TabButton> {
                   softWrap: false,
                   overflow: TextOverflow.visible,
                   style: GoogleFonts.lato(
-                    color: Colors.white.withOpacity(
-                      widget.isActive ? 1.0 : 0.7,
+                    color: Colors.white.withValues(
+                      alpha: widget.isActive ? 1.0 : 0.7,
                     ),
                     fontSize: 12,
                     fontWeight: widget.isActive

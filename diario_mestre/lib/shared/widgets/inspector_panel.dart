@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/notebook_page.dart';
-import 'flexible_page_editor.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
+import 'package:diario_mestre/features/notebook/widgets/flexible_page_editor.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 class InspectorPanel extends StatefulWidget {
   final NotebookPage? page;
@@ -72,7 +72,7 @@ class _InspectorPanelState extends State<InspectorPanel>
           color: AppColors.background, // Or a distinct paper color
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(-5, 0),
             ),
@@ -99,11 +99,11 @@ class _InspectorPanelState extends State<InspectorPanel>
                     right: 0,
                     height: 40,
                     child: Container(
-                      color: AppColors.primaryBlue.withOpacity(0.1),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.only(left: 16),
                       child: const Text(
-                        "Ficha Rápida",
+                        'Ficha Rápida',
                         style: TextStyle(
                           color: AppColors.primaryBlue,
                           fontWeight: FontWeight.bold,

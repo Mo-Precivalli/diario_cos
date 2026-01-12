@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 class PageCornerButton extends StatefulWidget {
   final bool isLeft;
@@ -59,8 +59,8 @@ class _PageCornerButtonState extends State<PageCornerButton>
                 isLeft: widget.isLeft,
                 curlProgress: _curlAnimation.value,
                 color: AppColors.notebookPage,
-                curlColor: Colors.white.withOpacity(
-                  0.9,
+                curlColor: Colors.white.withValues(
+                  alpha: 0.9,
                 ), // Cor da parte de trás da folha
               ),
               size: const Size(60, 60), // Tamanho da área clicável
@@ -78,7 +78,7 @@ class _PageCornerButtonState extends State<PageCornerButton>
                     widget.isLeft
                         ? Icons.keyboard_arrow_left
                         : Icons.keyboard_arrow_right,
-                    color: AppColors.textLight.withOpacity(0.5),
+                    color: AppColors.textLight.withValues(alpha: 0.5),
                     size: 24,
                   ),
                 ),
@@ -113,7 +113,7 @@ class _PageCornerPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.2 * curlProgress)
+      ..color = Colors.black.withValues(alpha: 0.2 * curlProgress)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
 
     double curlSize = size.width * curlProgress;

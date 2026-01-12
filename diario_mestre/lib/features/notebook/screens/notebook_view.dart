@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../models/notebook_page.dart';
-import '../providers/notebook_provider.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
-import 'page_corner_button.dart'; // Importe o novo widget
-import 'tab_sidebar.dart'; // Importe o TabSidebar
-import 'alphabet_sidebar.dart'; // Importe o AlphabetSidebar
+import 'package:diario_mestre/shared/widgets/page_corner_button.dart'; // Importe o novo widget
+import 'package:diario_mestre/shared/widgets/tab_sidebar.dart'; // Importe o TabSidebar
+import 'package:diario_mestre/shared/widgets/alphabet_sidebar.dart'; // Importe o AlphabetSidebar
 import 'package:google_fonts/google_fonts.dart';
-import 'card_grid.dart'; // Import CardGrid
-import 'flexible_page_editor.dart';
-import 'inspector_panel.dart';
-import 'dashboard_view.dart';
+import 'package:diario_mestre/features/library/widgets/card_grid.dart'; // Import CardGrid
+import '../widgets/flexible_page_editor.dart';
+import 'package:diario_mestre/shared/widgets/inspector_panel.dart';
+import 'package:diario_mestre/features/dashboard/screens/dashboard_view.dart';
 
 class NotebookView extends StatefulWidget {
   const NotebookView({super.key});
@@ -116,7 +116,7 @@ class _NotebookViewState extends State<NotebookView> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -333,7 +333,7 @@ class _NotebookViewState extends State<NotebookView> {
           bottom: 4,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.only(
                 topLeft: isLeft ? const Radius.circular(12) : Radius.zero,
                 bottomLeft: isLeft ? const Radius.circular(12) : Radius.zero,
@@ -360,7 +360,7 @@ class _NotebookViewState extends State<NotebookView> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 2,
                   offset: Offset(isLeft ? -2 : 2, 0),
                 ),
@@ -384,7 +384,7 @@ class _NotebookViewState extends State<NotebookView> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: Offset(isLeft ? -1 : 1, 0),
           ),
@@ -460,7 +460,7 @@ class _NotebookViewState extends State<NotebookView> {
             Icon(
               Icons.arrow_back,
               size: 32,
-              color: AppColors.textLight.withOpacity(0.5),
+              color: AppColors.textLight.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -472,7 +472,7 @@ class _NotebookViewState extends State<NotebookView> {
     }
 
     return Center(
-      child: Icon(icon, size: 300, color: Colors.black.withOpacity(0.05)),
+      child: Icon(icon, size: 300, color: Colors.black.withValues(alpha: 0.05)),
     );
   }
 
@@ -794,10 +794,10 @@ class _NotebookViewState extends State<NotebookView> {
         // Overwrite standard empty state with just our text
         // Ensure trailing newline for Quill
         jsonDetail = [
-          {"insert": "$textToAppend\n"},
+          {'insert': '$textToAppend\n'},
         ];
       } else {
-        jsonDetail.add({"insert": textToAppend});
+        jsonDetail.add({'insert': textToAppend});
       }
 
       final newContent = jsonEncode(jsonDetail);

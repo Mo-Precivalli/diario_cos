@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../providers/notebook_provider.dart';
-import '../models/notebook_page.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -42,7 +42,7 @@ class _DashboardViewState extends State<DashboardView> {
             (p) => p.title == 'Dashboard Quick Notes',
           );
         } catch (_) {}
-        _notesController.text = "";
+        _notesController.text = '';
       }
     } catch (e) {
       debugPrint('Error loading dashboard notes: $e');
@@ -51,7 +51,7 @@ class _DashboardViewState extends State<DashboardView> {
 
   String _extractText(String content) {
     if (content.startsWith('[')) {
-      return "Conteúdo das notas (Edite na página completa)";
+      return 'Conteúdo das notas (Edite na página completa)';
     }
     return content;
   }
@@ -112,6 +112,7 @@ class _DashboardViewState extends State<DashboardView> {
                     : const Icon(Icons.circle_outlined, color: Colors.grey),
                 onTap: () async {
                   await _toggleCenaTag(page);
+                  if (!context.mounted) return;
                   Navigator.pop(context); // Close for simplicity
                 },
               );
@@ -166,12 +167,13 @@ class _DashboardViewState extends State<DashboardView> {
                 return FutureBuilder<List<NotebookPage>>(
                   future: provider.getPagesByTag('Cena'),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData)
+                    if (!snapshot.hasData) {
                       return const Center(
                         child: CircularProgressIndicator(
                           color: AppColors.accentGold,
                         ),
                       );
+                    }
                     final scenePages = snapshot.data!;
 
                     if (scenePages.isEmpty) {
@@ -219,9 +221,11 @@ class _DashboardViewState extends State<DashboardView> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.textLight.withOpacity(0.3)),
+                border: Border.all(
+                  color: AppColors.textLight.withValues(alpha: 0.3),
+                ),
               ),
               child: TextField(
                 controller: _notesController,
@@ -265,7 +269,9 @@ class _DashboardViewState extends State<DashboardView> {
               offset: Offset(0, 2),
             ),
           ],
-          border: Border.all(color: AppColors.accentGold.withOpacity(0.5)),
+          border: Border.all(
+            color: AppColors.accentGold.withValues(alpha: 0.5),
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

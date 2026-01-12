@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 class BookCoverView extends StatefulWidget {
   final VoidCallback onOpen;
@@ -64,7 +64,7 @@ class _BookCoverViewState extends State<BookCoverView>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                     blurRadius: 30,
                     offset: const Offset(10, 15),
                   ),
@@ -96,7 +96,9 @@ class _BookCoverViewState extends State<BookCoverView>
                     top: 0,
                     bottom: 0,
                     width: 2,
-                    child: Container(color: Colors.black.withOpacity(0.2)),
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.2),
+                    ),
                   ),
 
                   // Decorative Border
@@ -109,7 +111,7 @@ class _BookCoverViewState extends State<BookCoverView>
                           Container(
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.black.withOpacity(0.5),
+                                color: Colors.black.withValues(alpha: 0.5),
                                 width: 3, // 1px maior que o dourado (2px)
                               ),
                               borderRadius: BorderRadius.circular(12),
@@ -164,22 +166,22 @@ class _BookCoverViewState extends State<BookCoverView>
                               shadows: [
                                 Shadow(
                                   offset: const Offset(1, 1),
-                                  color: Colors.black.withOpacity(0.8),
+                                  color: Colors.black.withValues(alpha: 0.8),
                                   blurRadius: 1,
                                 ),
                                 Shadow(
                                   offset: const Offset(-1, 1),
-                                  color: Colors.black.withOpacity(0.8),
+                                  color: Colors.black.withValues(alpha: 0.8),
                                   blurRadius: 1,
                                 ),
                                 Shadow(
                                   offset: const Offset(1, -1),
-                                  color: Colors.black.withOpacity(0.8),
+                                  color: Colors.black.withValues(alpha: 0.8),
                                   blurRadius: 1,
                                 ),
                                 Shadow(
                                   offset: const Offset(-1, -1),
-                                  color: Colors.black.withOpacity(0.8),
+                                  color: Colors.black.withValues(alpha: 0.8),
                                   blurRadius: 1,
                                 ),
                               ],
@@ -207,7 +209,7 @@ class _BookCoverViewState extends State<BookCoverView>
                               // Outline simples usando shadows
                               Shadow(
                                 offset: const Offset(1.5, 1.5),
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                                 blurRadius: 0,
                               ),
                             ],
@@ -219,12 +221,14 @@ class _BookCoverViewState extends State<BookCoverView>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.lato(
                             fontSize: 18,
-                            color: const Color(0xFFD4AF37).withOpacity(0.9),
+                            color: const Color(
+                              0xFFD4AF37,
+                            ).withValues(alpha: 0.9),
                             letterSpacing: 2.0,
                             shadows: [
                               Shadow(
                                 offset: const Offset(1, 1),
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                                 blurRadius: 0,
                               ),
                             ],
@@ -256,12 +260,12 @@ class _BookCoverViewState extends State<BookCoverView>
       child: Icon(
         Icons.pets,
         size: 24,
-        color: const Color(0xFFD4AF37).withOpacity(0.6),
+        color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
         shadows: [
           Shadow(
             offset: const Offset(0.5, 0.5),
             blurRadius: 0,
-            color: Colors.black.withOpacity(0.6),
+            color: Colors.black.withValues(alpha: 0.6),
           ),
         ],
       ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 class StatBlockDecoration {
   static Widget taperedRule() {
@@ -10,9 +10,9 @@ class StatBlockDecoration {
         color: AppColors.accentGold,
         gradient: LinearGradient(
           colors: [
-            AppColors.accentGold.withOpacity(0),
+            AppColors.accentGold.withValues(alpha: 0),
             AppColors.accentGold,
-            AppColors.accentGold.withOpacity(0),
+            AppColors.accentGold.withValues(alpha: 0),
           ],
           stops: const [0.0, 0.5, 1.0],
         ),

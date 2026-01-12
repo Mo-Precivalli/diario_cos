@@ -1,7 +1,7 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
-import '../models/notebook_tab.dart';
-import '../models/notebook_page.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_tab.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
 
 class DatabaseService {
   static Database? _database;
@@ -70,7 +70,7 @@ class DatabaseService {
         await db.insert('tabs', {
           'id': tab.id,
           'name': tab.name,
-          'color': tab.color.value,
+          'color': tab.color.toARGB32(),
           'icon': tab.icon.codePoint,
           'sort_order': tab.order,
         });
@@ -80,7 +80,7 @@ class DatabaseService {
           'tabs',
           {
             'name': tab.name,
-            'color': tab.color.value,
+            'color': tab.color.toARGB32(),
             'icon': tab.icon.codePoint,
             'sort_order': tab.order,
           },
@@ -188,7 +188,7 @@ class DatabaseService {
       await db.insert('tabs', {
         'id': tab.id,
         'name': tab.name,
-        'color': tab.color.value,
+        'color': tab.color.toARGB32(),
         'icon': tab.icon.codePoint,
         'sort_order': tab.order,
       });

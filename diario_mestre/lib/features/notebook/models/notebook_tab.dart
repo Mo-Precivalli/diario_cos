@@ -20,7 +20,7 @@ class NotebookTab {
     return {
       'id': id,
       'name': name,
-      'color': color.value,
+      'color': color.toARGB32(),
       'icon': icon.codePoint,
       'order': order,
     };

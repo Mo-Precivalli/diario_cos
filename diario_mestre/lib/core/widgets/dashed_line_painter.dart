@@ -6,7 +6,7 @@ class DashedLinePainter extends CustomPainter {
     if (size.width < 20) return; // Don't paint if space is too small
 
     final paint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
+      ..color = Colors.grey.withValues(alpha: 0.3)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 

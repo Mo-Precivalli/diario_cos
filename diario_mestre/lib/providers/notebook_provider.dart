@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../models/notebook_tab.dart';
-import '../models/notebook_page.dart';
-import '../services/database_service.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_tab.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
+import 'package:diario_mestre/services/database_service.dart';
 
 class NotebookProvider extends ChangeNotifier {
   final DatabaseService _dbService = DatabaseService();
