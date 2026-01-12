@@ -147,9 +147,11 @@ class _NotebookViewState extends State<NotebookView> {
                               // Camadas de páginas (Volume)
                               _buildPageVolume(isLeft: true),
                               // Conteúdo
-                              _buildPageSurface(
-                                child: leftContent,
-                                isLeft: true,
+                              Positioned.fill(
+                                child: _buildPageSurface(
+                                  child: leftContent,
+                                  isLeft: true,
+                                ),
                               ),
 
                               // Navegação: Voltar (Índice ou Páginas)
@@ -187,9 +189,11 @@ class _NotebookViewState extends State<NotebookView> {
                               // Camadas de páginas (Volume)
                               _buildPageVolume(isLeft: false),
                               // Conteúdo
-                              _buildPageSurface(
-                                child: rightContent,
-                                isLeft: false,
+                              Positioned.fill(
+                                child: _buildPageSurface(
+                                  child: rightContent,
+                                  isLeft: false,
+                                ),
                               ),
 
                               // Navegação: Avançar (Índice ou Páginas)
