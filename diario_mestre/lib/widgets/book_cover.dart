@@ -73,11 +73,19 @@ class _BookCoverViewState extends State<BookCoverView>
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    AppColors.notebookFrame.withAlpha(200), // Darker spine
+                    Color.lerp(
+                      AppColors.notebookFrame,
+                      Colors.black,
+                      0.2,
+                    )!, // Darker spine
                     AppColors.notebookFrame,
-                    AppColors.notebookFrame.withAlpha(230),
+                    Color.lerp(
+                      AppColors.notebookFrame,
+                      Colors.black,
+                      0.1,
+                    )!, // Slightly dark edge
                   ],
-                  stops: const [0.0, 0.1, 1.0],
+                  stops: const [0.0, 0.15, 1.0],
                 ),
               ),
               child: Stack(

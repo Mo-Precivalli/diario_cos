@@ -6,6 +6,9 @@ class NotebookPage {
   final String content; // JSON do Quill Delta
   final int order;
   final bool isContinuation; // New flag for overflow grouping
+  final List<String> tags; // New: Tags support
+  final int? ac; // Stats
+  final int? hp; // Stats
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -16,6 +19,9 @@ class NotebookPage {
     required this.content,
     required this.order,
     this.isContinuation = false,
+    this.tags = const [],
+    this.ac,
+    this.hp,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -28,6 +34,9 @@ class NotebookPage {
       'content': content,
       'order': order,
       'is_continuation': isContinuation ? 1 : 0,
+      'tags': tags.join(','),
+      'ac': ac,
+      'hp': hp,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -41,6 +50,11 @@ class NotebookPage {
       content: map['content'],
       order: map['order'],
       isContinuation: map['is_continuation'] == 1,
+      tags: (map['tags'] != null && map['tags'].toString().isNotEmpty)
+          ? map['tags'].toString().split(',')
+          : [],
+      ac: map['ac'],
+      hp: map['hp'],
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),
     );
@@ -53,6 +67,9 @@ class NotebookPage {
     String? content,
     int? order,
     bool? isContinuation,
+    List<String>? tags,
+    int? ac,
+    int? hp,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -63,6 +80,9 @@ class NotebookPage {
       content: content ?? this.content,
       order: order ?? this.order,
       isContinuation: isContinuation ?? this.isContinuation,
+      tags: tags ?? this.tags,
+      ac: ac ?? this.ac,
+      hp: hp ?? this.hp,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

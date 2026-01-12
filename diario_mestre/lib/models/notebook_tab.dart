@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
 
 /// Modelo que representa uma aba do caderno
 class NotebookTab {
@@ -40,53 +39,32 @@ class NotebookTab {
   static List<NotebookTab> getDefaultTabs() {
     return [
       NotebookTab(
-        id: 'monsters',
-        name: 'Bestiário',
-        color: AppColors.tabMonster,
-        icon: Icons.pets, // Patinha
+        id: 'now',
+        name: 'O Agora',
+        color: const Color(0xFFD32F2F), // Red for Action/Immediate
+        icon: Icons.bolt,
         order: 0,
       ),
       NotebookTab(
-        id: 'story',
-        name: 'História',
-        color: AppColors.tabStory,
-        icon: Icons.auto_stories, // Livro aberto
+        id: 'world',
+        name: 'O Mundo',
+        color: const Color(0xFF388E3C), // Green for World/Nature
+        icon: Icons.map,
         order: 1,
       ),
       NotebookTab(
-        id: 'sessions',
-        name: 'Sessões',
-        color: AppColors.tabSessions,
-        icon: Icons.edit_note, // Notas fofas
+        id: 'people',
+        name: 'O Povo',
+        color: const Color(0xFF1976D2), // Blue for People
+        icon: Icons.groups,
         order: 2,
       ),
       NotebookTab(
-        id: 'characters',
-        name: 'Personagens',
-        color: AppColors.tabCharacters,
-        icon: Icons.face, // Carinha
+        id: 'past',
+        name: 'O Passado',
+        color: const Color(0xFF795548), // Brown/Sepia for History
+        icon: Icons.history_edu,
         order: 3,
-      ),
-      NotebookTab(
-        id: 'items',
-        name: 'Itens',
-        color: AppColors.tabItems,
-        icon: Icons.backpack, // Mochila de aventura
-        order: 4,
-      ),
-      NotebookTab(
-        id: 'spells',
-        name: 'Magia',
-        color: AppColors.tabSpells, // You'll need to add this color too
-        icon: Icons.auto_fix_high, // Varinha mágica
-        order: 5,
-      ),
-      NotebookTab(
-        id: 'rules',
-        name: 'Regras',
-        color: AppColors.tabRules,
-        icon: Icons.menu_book, // Livro de regras
-        order: 6,
       ),
     ];
   }

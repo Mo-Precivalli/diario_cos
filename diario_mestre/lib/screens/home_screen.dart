@@ -127,78 +127,77 @@ class _HomeScreenState extends State<HomeScreen>
                   child: SizedBox(
                     width: bookWidthOpen,
                     height: bookHeight,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // --- METADE DIREITA (Base) ---
-                        // Fica parada. Se fechado, representa a "contracapa" ou apenas o volume.
-                        // Se aberto, é a página direita.
-                        Positioned(
-                          right: 0,
-                          width: bookWidthClosed,
-                          height: bookHeight,
-                          child: ClipRect(
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              widthFactor: 0.5,
-                              child: SizedBox(
-                                width: bookWidthOpen,
-                                height: bookHeight,
-                                child: NotebookView(),
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, child) {
+                        return Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // --- METADE DIREITA (Base) ---
+                            // Página Direita do Livro
+                            Positioned(
+                              right: 0,
+                              width: bookWidthClosed,
+                              height: bookHeight,
+                              child: ClipRect(
+                                child: Stack(
+                                  children: [
+                                    Positioned(
+                                      right: 0,
+                                      width: bookWidthOpen, // Largura total
+                                      height: bookHeight,
+                                      child: NotebookView(),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ),
 
-                        // --- METADE ESQUERDA / CAPA (Móvel) ---
-                        // Começa na DIREITA visualmente (sobre a base) e gira para a ESQUERDA.
-                        Positioned(
-                          right: 0,
-                          width: bookWidthClosed,
-                          height: bookHeight,
-                          child: AnimatedBuilder(
-                            animation: _controller,
-                            builder: (context, child) {
-                              // Angulo de 0 (fechado) a 180 (aberto)
-                              final angle = _controller.value * pi;
-
-                              return Transform(
+                            // --- METADE ESQUERDA / CAPA (Móvel) ---
+                            // Página Esquerda do Livro (Verso da Capa)
+                            Positioned(
+                              right: 0,
+                              width: bookWidthClosed,
+                              height: bookHeight,
+                              child: Transform(
                                 transform: Matrix4.identity()
-                                  ..setEntry(3, 2, 0.001) // Perspectiva
+                                  ..setEntry(
+                                    3,
+                                    2,
+                                    -0.0005,
+                                  ) // Perspectiva Negativa (2000px)
                                   ..rotateY(
-                                    -angle,
-                                  ), // Negativo roda para "fora" em direção à esquerda (CCW)
-                                alignment: Alignment
-                                    .centerLeft, // Pivô na lombada (borda esquerda deste pedaço)
-                                child: angle < (pi / 2)
-                                    ?
-                                      // FASE 1: 0 a 90 graus (Vendo Frente)
-                                      BookCoverView(onOpen: _openBook)
-                                    :
-                                      // FASE 2: 90 a 180 graus (Vendo Verso)
-                                      Transform(
+                                    -(_controller.value * pi),
+                                  ), // -180 graus (pi)
+                                alignment:
+                                    Alignment.centerLeft, // Pivô na lombada
+                                child: (_controller.value * pi) < (pi / 2)
+                                    ? BookCoverView(onOpen: _openBook)
+                                    : Transform(
                                         alignment: Alignment.center,
                                         transform: Matrix4.identity()
                                           ..rotateY(
                                             -pi,
-                                          ), // Desvira o conteúdo para ler
+                                          ), // Desvira para conteúdo
                                         child: ClipRect(
-                                          child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            widthFactor: 0.5,
-                                            child: SizedBox(
-                                              width: bookWidthOpen,
-                                              height: bookHeight,
-                                              child: NotebookView(),
-                                            ),
+                                          child: Stack(
+                                            children: [
+                                              Positioned(
+                                                left: 0,
+                                                width:
+                                                    bookWidthOpen, // Largura total
+                                                height: bookHeight,
+                                                child: NotebookView(),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),

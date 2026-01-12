@@ -4,14 +4,15 @@ import 'package:provider/provider.dart';
 import '../models/notebook_page.dart';
 import '../providers/notebook_provider.dart';
 import '../theme/colors.dart';
-import 'page_editor.dart';
-import 'monster_editor.dart';
 
 import 'page_corner_button.dart'; // Importe o novo widget
 import 'tab_sidebar.dart'; // Importe o TabSidebar
 import 'alphabet_sidebar.dart'; // Importe o AlphabetSidebar
 import 'package:google_fonts/google_fonts.dart';
 import 'card_grid.dart'; // Import CardGrid
+import 'flexible_page_editor.dart';
+import 'inspector_panel.dart';
+import 'dashboard_view.dart';
 
 class NotebookView extends StatefulWidget {
   const NotebookView({super.key});
@@ -57,7 +58,10 @@ class _NotebookViewState extends State<NotebookView> {
         // Dados da Página Esquerda (Selecionada ou Índice)
         Widget leftContent;
         if (isIndexMode) {
-          if (provider.indexSpreadIndex == 0) {
+          if (provider.activeTab?.id == 'now') {
+            // "O Agora" uses Dashboard as its "Index" or Main View
+            leftContent = const DashboardView();
+          } else if (provider.indexSpreadIndex == 0) {
             leftContent = _buildEmptyState(provider.activeTab?.id);
           } else {
             final items = provider.getIndexPageChunk(
@@ -119,95 +123,119 @@ class _NotebookViewState extends State<NotebookView> {
             ],
           ),
           padding: const EdgeInsets.all(16), // Margem da capa
-          child: Column(
+          child: Stack(
             children: [
-              // Barra de Navegação Superior (Back / Next / Prev)
-              // Navegação removida do topo (movida para as laterais)
-              if (!isIndexMode) const SizedBox(height: 10),
+              Column(
+                children: [
+                  // Barra de Navegação Superior (Back / Next / Prev)
+                  // Navegação removida do topo (movida para as laterais)
+                  if (!isIndexMode) const SizedBox(height: 10),
 
-              Expanded(
-                child: Row(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.stretch, // Ensure sidebars fill height
-                  children: [
-                    // --- SIDEBAR DE ALFABETO (ESQUERDA) ---
-                    const AlphabetSidebar(),
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment
+                          .stretch, // Ensure sidebars fill height
+                      children: [
+                        // --- SIDEBAR DE ALFABETO (ESQUERDA) ---
+                        const AlphabetSidebar(),
 
-                    // --- PÁGINA ESQUERDA ---
-                    Expanded(
-                      flex: 1,
-                      child: Stack(
-                        children: [
-                          // Camadas de páginas (Volume)
-                          _buildPageVolume(isLeft: true),
-                          // Conteúdo
-                          _buildPageSurface(child: leftContent, isLeft: true),
-
-                          // Navegação: Voltar (Índice ou Páginas)
-                          Positioned(
-                            left: 0,
-                            bottom: 0,
-                            width: 60,
-                            height: 60,
-                            child: PageCornerButton(
-                              key: ValueKey(
-                                'corner_left_${isIndexMode ? provider.indexSpreadIndex : provider.currentPageIndex}',
+                        // --- PÁGINA ESQUERDA ---
+                        Expanded(
+                          flex: 1,
+                          child: Stack(
+                            children: [
+                              // Camadas de páginas (Volume)
+                              _buildPageVolume(isLeft: true),
+                              // Conteúdo
+                              _buildPageSurface(
+                                child: leftContent,
+                                isLeft: true,
                               ),
-                              isLeft: true,
-                              onTap: isIndexMode
-                                  ? provider.prevIndexSpread
-                                  : provider.previousPage,
-                              visible: isIndexMode
-                                  ? provider.canGoPrevIndexSpread
-                                  : provider.hasPreviousPage,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
 
-                    // --- DOBRA CENTRAL (LOMBADA) ---
-                    Container(width: 2, color: Colors.grey.shade400),
-
-                    // --- PÁGINA DIREITA ---
-                    Expanded(
-                      flex: 1,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          // Camadas de páginas (Volume)
-                          _buildPageVolume(isLeft: false),
-                          // Conteúdo
-                          _buildPageSurface(child: rightContent, isLeft: false),
-
-                          // Navegação: Avançar (Índice ou Páginas)
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            width: 60,
-                            height: 60,
-                            child: PageCornerButton(
-                              key: ValueKey(
-                                'corner_right_${isIndexMode ? provider.indexSpreadIndex : provider.currentPageIndex}',
+                              // Navegação: Voltar (Índice ou Páginas)
+                              Positioned(
+                                left: 0,
+                                bottom: 0,
+                                width: 60,
+                                height: 60,
+                                child: PageCornerButton(
+                                  key: ValueKey(
+                                    'corner_left_${isIndexMode ? provider.indexSpreadIndex : provider.currentPageIndex}',
+                                  ),
+                                  isLeft: true,
+                                  onTap: isIndexMode
+                                      ? provider.prevIndexSpread
+                                      : provider.previousPage,
+                                  visible: isIndexMode
+                                      ? provider.canGoPrevIndexSpread
+                                      : provider.hasPreviousPage,
+                                ),
                               ),
-                              isLeft: false,
-                              onTap: isIndexMode
-                                  ? provider.nextIndexSpread
-                                  : provider.nextPage,
-                              visible: isIndexMode
-                                  ? provider.canGoNextIndexSpread
-                                  : provider.hasNextPage,
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
 
-                    // --- ABAS LATERAIS ---
-                    const TabSidebar(),
-                  ],
-                ),
+                        // --- DOBRA CENTRAL (LOMBADA) ---
+                        Container(width: 2, color: Colors.grey.shade400),
+
+                        // --- PÁGINA DIREITA ---
+                        Expanded(
+                          flex: 1,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // Camadas de páginas (Volume)
+                              _buildPageVolume(isLeft: false),
+                              // Conteúdo
+                              _buildPageSurface(
+                                child: rightContent,
+                                isLeft: false,
+                              ),
+
+                              // Navegação: Avançar (Índice ou Páginas)
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                width: 60,
+                                height: 60,
+                                child: PageCornerButton(
+                                  key: ValueKey(
+                                    'corner_right_${isIndexMode ? provider.indexSpreadIndex : provider.currentPageIndex}',
+                                  ),
+                                  isLeft: false,
+                                  onTap: isIndexMode
+                                      ? provider.nextIndexSpread
+                                      : provider.nextPage,
+                                  visible: isIndexMode
+                                      ? provider.canGoNextIndexSpread
+                                      : provider.hasNextPage,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // --- ABAS LATERAIS ---
+                        const TabSidebar(),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+              // --- INSPECTOR PANEL OVERLAY ---
+              if (provider.inspectorPage != null)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: InspectorPanel(
+                    page: provider.inspectorPage,
+                    onClose: provider.closeInspector,
+                    onSave: (updatedPage) async {
+                      await provider.updatePage(updatedPage);
+                    },
+                  ),
+                ),
             ],
           ),
         );
@@ -216,92 +244,63 @@ class _NotebookViewState extends State<NotebookView> {
   }
 
   Widget _buildEditorForPage(NotebookProvider provider, NotebookPage page) {
-    if (provider.activeTab?.id == 'monsters') {
-      return MonsterEditor(
-        page: page,
-        onSave: (updatedPage) async {
-          if (updatedPage.id.isEmpty) {
-            await provider.createPageFromObject(updatedPage);
-          } else {
-            await provider.updatePage(updatedPage);
-          }
-          // No need to setState logic locally for selection since provider handles it via index
-        },
-      );
-    }
-
-    // Check if this is a right-side page (visually, based on index parity might not be enough if we are in book mode)
-    // Actually, we called _buildEditorForPage explicitly for left and right content.
-    // But this method doesn't know if it's left or right easily without context.
-    // However, we can check the page ID against the current page list or pass a param.
-    // For now, let's look at how it's called.
-    // It's better to update the signature to accept `isRightSide`.
-    // But since I can't easily change signature in one go without errors if I don't update all calls (which are local),
-    // I made a mistake in the plan not noticing this helper is used for BOTH.
-    // I will use a simple heuristic: if it's the `currentPageIndex + 1`, it's right.
-
+    // Determine if right side for focus logic (heuristic)
     final isRightSide =
-        provider.pages.indexOf(page) == provider.currentPageIndex + 1 ||
+        provider.pages.indexOf(page) == (provider.currentPageIndex + 1) ||
         page.id.isEmpty;
 
-    return PageEditor(
+    return FlexiblePageEditor(
       page: page,
-      showTitle: !isRightSide, // Show title only on left
-      showFormatButton:
-          !isRightSide, // Show format button only on left (shared toolbar) - actually user said "lapis só em um"
-      shouldFocus:
-          _pageIdToFocus == page.id ||
-          (_pageIdToFocus == 'new_right' && isRightSide),
-      onOverflow: (overflowData) {
-        final textToMove = overflowData is String ? overflowData : '';
-
-        if (!isRightSide) {
-          // Left page overflow -> Focus Right
-          if (textToMove.isNotEmpty &&
-              provider.currentPageIndex + 1 < provider.pages.length) {
-            final nextPage = provider.pages[provider.currentPageIndex + 1];
-            _appendTextToPage(provider, nextPage, textToMove);
+      showTitle: !page.isContinuation,
+      showFormatButton: !page.isContinuation,
+      shouldFocus: _pageIdToFocus == page.id,
+      onNavigate: (title) async {
+        final results = await provider.searchPages(title);
+        if (results.isNotEmpty) {
+          final target = results.firstWhere(
+            (p) => p.title.toLowerCase() == title.toLowerCase(),
+            orElse: () => results.first,
+          );
+          if (provider.activeTab?.id != target.tabId) {
+            try {
+              final targetTab = provider.tabs.firstWhere(
+                (t) => t.id == target.tabId,
+              );
+              await provider.setActiveTab(targetTab);
+            } catch (_) {}
           }
-
-          if (mounted) {
-            setState(() {
-              if (provider.currentPageIndex + 1 < provider.pages.length) {
-                _pageIdToFocus =
-                    provider.pages[provider.currentPageIndex + 1].id;
-              } else {
-                _pageIdToFocus = 'new_right';
-              }
-            });
+          final index = provider.pages.indexWhere((p) => p.id == target.id);
+          if (index != -1) {
+            provider.openPage(index);
           }
         } else {
-          // Right page overflow -> Trigger Next Page creation
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Página "$title" não encontrada.')),
+            );
+          }
+        }
+      },
+      onOverflow: (overflowData) {
+        // Overflow logic (kept similar but using text chunks)
+        final textToMove = overflowData is String ? overflowData : '';
+        if (textToMove.isEmpty) return;
+
+        if (!isRightSide) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            try {
-              await provider.createPage(
-                '',
-                isContinuation: true,
-              ); // Untitled continuation
-
-              if (!mounted) return;
-
-              // Move text to next page WITHOUT navigating automatically
-              // This prevents "window jumping" when editing right page
-              final rightPageIndex = provider.currentPageIndex + 1;
-              if (rightPageIndex + 1 < provider.pages.length) {
-                final nextPage = provider.pages[rightPageIndex + 1];
-                if (textToMove.isNotEmpty) {
-                  await _appendTextToPage(provider, nextPage, textToMove);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Texto movido para a próxima página.'),
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                }
+            // Move to Right Page
+            if (provider.currentPageIndex + 1 < provider.pages.length) {
+              final nextPage = provider.pages[provider.currentPageIndex + 1];
+              await _appendTextToPage(provider, nextPage, textToMove);
+              setState(() => _pageIdToFocus = nextPage.id);
+            } else {
+              // Create new page on right
+              await provider.createPage('', isContinuation: true);
+              if (provider.currentPageIndex + 1 < provider.pages.length) {
+                final nextPage = provider.pages[provider.currentPageIndex + 1];
+                await _appendTextToPage(provider, nextPage, textToMove);
+                setState(() => _pageIdToFocus = nextPage.id);
               }
-            } catch (e) {
-              debugPrint("Error handling right page overflow: $e");
             }
           });
         }
@@ -390,11 +389,11 @@ class _NotebookViewState extends State<NotebookView> {
           begin: isLeft ? Alignment.centerRight : Alignment.centerLeft,
           end: isLeft ? Alignment.centerLeft : Alignment.centerRight,
           colors: [
-            const Color(0xFFE5DECF), // Dobra do livro (Sombra papel ivory)
+            const Color(0xFFE5DECF),
             const Color(0xFFF5F0E1),
             AppColors.notebookPage,
             AppColors.notebookPage,
-            const Color(0xFFF1EAD8), // Borda externa levemente escurecida
+            const Color(0xFFF1EAD8),
           ],
           stops: const [0.0, 0.05, 0.2, 0.9, 1.0],
         ),
@@ -424,7 +423,10 @@ class _NotebookViewState extends State<NotebookView> {
               ),
             ),
             // Conteúdo da Página
-            child,
+            Container(
+              // key: ValueKey(child.hashCode), // Removed key to avoid rebuilds if unnecessary
+              child: child,
+            ),
           ],
         ),
       ),
@@ -687,6 +689,11 @@ class _NotebookViewState extends State<NotebookView> {
                             provider.togglePageSelection(page.id);
                           } else {
                             provider.openPage(realIndex);
+                          }
+                        },
+                        onLongPress: () {
+                          if (!provider.isDeleteMode) {
+                            provider.openInInspector(page);
                           }
                         },
                         hoverColor: Colors.transparent, // Sem cor de hover

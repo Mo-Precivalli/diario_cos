@@ -39,8 +39,26 @@ class DatabaseService {
       // Column might already exist
     }
 
+    // Migration Fix: Add tags column if it doesn't exist
+    try {
+      await db.execute('ALTER TABLE pages ADD COLUMN tags TEXT');
+    } catch (e) {
+      // Column might already exist
+    }
+
+    // Migration Fix: Add stats columns
+    try {
+      await db.execute('ALTER TABLE pages ADD COLUMN ac INTEGER');
+    } catch (e) {
+      // Column might already exist
+    }
+    try {
+      await db.execute('ALTER TABLE pages ADD COLUMN hp INTEGER');
+    } catch (e) {
+      // Column might already exist
+    }
+
     // Check for missing tabs and insert them
-    // This ensures new tabs (like 'spells') are added to existing databases
     final defaultTabs = NotebookTab.getDefaultTabs();
     for (var tab in defaultTabs) {
       final existing = await db.query(
@@ -56,6 +74,69 @@ class DatabaseService {
           'icon': tab.icon.codePoint,
           'sort_order': tab.order,
         });
+      } else {
+        // Update existing tab (name/color/icon) if it matches our new defaults
+        await db.update(
+          'tabs',
+          {
+            'name': tab.name,
+            'color': tab.color.value,
+            'icon': tab.icon.codePoint,
+            'sort_order': tab.order,
+          },
+          where: 'id = ?',
+          whereArgs: [tab.id],
+        );
+      }
+    }
+
+    // --- Data Migration ---
+    // Move 'sessions' -> 'now' (if 'now' is empty or we just want to move them)
+    // Move 'monsters' + 'characters' -> 'people'
+    // Move 'story' -> 'past'
+    // Move 'items' -> 'world' (or just keep them? User didn't specify items destination, but World seems fit for loot/locations)
+
+    // Helper to move pages
+    Future<void> movePages(String oldTabId, String newTabId) async {
+      await db.update(
+        'pages',
+        {'tab_id': newTabId},
+        where: 'tab_id = ?',
+        whereArgs: [oldTabId],
+      );
+      // Verify if oldTabId is not in new defaults, we might want to delete the tab entry?
+      // For safety, we keep the tab entry in DB but it will be empty and not loaded by getDefaultTabs logic if we only load what we want?
+      // Actually getTabs() loads ALL tabs from DB. So we should delete old tabs after migration.
+    }
+
+    await movePages('sessions', 'now');
+    await movePages('monsters', 'people');
+    await movePages('characters', 'people');
+    await movePages('story', 'past');
+    await movePages('items', 'world');
+    await movePages(
+      'rules',
+      'world',
+    ); // Rules fit in World? or Now? Let's put in World for reference.
+
+    // Delete old tabs that are not in the new list
+    final newTabIds = defaultTabs.map((t) => t.id).toList();
+    // We can't easily do "DELETE FROM tabs WHERE id NOT IN (...)" safely without binding parameters for list.
+    // So let's just delete specific known old ones.
+    final oldTabsToDelete = [
+      'monsters',
+      'characters',
+      'story',
+      'items',
+      'rules',
+      'spells',
+      'sessions',
+    ];
+    for (var oldId in oldTabsToDelete) {
+      if (!newTabIds.contains(oldId)) {
+        // Only delete if we successfully moved pages (count pages first?)
+        // For now, assume moved.
+        await db.delete('tabs', where: 'id = ?', whereArgs: [oldId]);
       }
     }
 
@@ -83,6 +164,9 @@ class DatabaseService {
         content TEXT NOT NULL,
         sort_order INTEGER NOT NULL,
         is_continuation INTEGER DEFAULT 0,
+        tags TEXT,
+        ac INTEGER,
+        hp INTEGER,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (tab_id) REFERENCES tabs (id) ON DELETE CASCADE
@@ -138,6 +222,9 @@ class DatabaseService {
       'content': page.content,
       'sort_order': page.order,
       'is_continuation': page.isContinuation ? 1 : 0,
+      'tags': page.tags.join(','),
+      'ac': page.ac,
+      'hp': page.hp,
       'created_at': page.createdAt.toIso8601String(),
       'updated_at': page.updatedAt.toIso8601String(),
     });
@@ -161,6 +248,9 @@ class DatabaseService {
             'content': map['content'],
             'order': map['sort_order'],
             'is_continuation': map['is_continuation'] ?? 0,
+            'tags': map['tags'],
+            'ac': map['ac'],
+            'hp': map['hp'],
             'created_at': map['created_at'],
             'updated_at': map['updated_at'],
           }),
@@ -177,6 +267,9 @@ class DatabaseService {
         'content': page.content,
         'sort_order': page.order,
         'is_continuation': page.isContinuation ? 1 : 0,
+        'tags': page.tags.join(','),
+        'ac': page.ac,
+        'hp': page.hp,
         'updated_at': DateTime.now().toIso8601String(),
       },
       where: 'id = ?',
@@ -206,6 +299,37 @@ class DatabaseService {
             'content': map['content'],
             'order': map['sort_order'],
             'is_continuation': map['is_continuation'] ?? 0,
+            'tags': map['tags'],
+            'ac': map['ac'],
+            'hp': map['hp'],
+            'created_at': map['created_at'],
+            'updated_at': map['updated_at'],
+          }),
+        )
+        .toList();
+  }
+
+  Future<List<NotebookPage>> getPagesByTag(String tag) async {
+    final db = await database;
+    // Tags are stored as "tag1,tag2,tag3"
+    // We search for whole word match ideally, or just simple substring for now
+    final result = await db.query(
+      'pages',
+      where: 'tags LIKE ?',
+      whereArgs: ['%$tag%'],
+    );
+    return result
+        .map(
+          (map) => NotebookPage.fromMap({
+            'id': map['id'],
+            'tab_id': map['tab_id'],
+            'title': map['title'],
+            'content': map['content'],
+            'order': map['sort_order'],
+            'is_continuation': map['is_continuation'] ?? 0,
+            'tags': map['tags'],
+            'ac': map['ac'],
+            'hp': map['hp'],
             'created_at': map['created_at'],
             'updated_at': map['updated_at'],
           }),

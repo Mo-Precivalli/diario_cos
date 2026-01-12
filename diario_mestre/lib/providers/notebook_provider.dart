@@ -5,6 +5,7 @@ import '../services/database_service.dart';
 
 class NotebookProvider extends ChangeNotifier {
   final DatabaseService _dbService = DatabaseService();
+  DatabaseService get databaseService => _dbService;
 
   List<NotebookTab> _tabs = [];
   NotebookTab? _activeTab;
@@ -149,7 +150,7 @@ class NotebookProvider extends ChangeNotifier {
     _indexSpreadIndex = 0; // Reset spread pagination
     notifyListeners();
     await loadPages(tab.id);
-    _currentPageIndex = -1; // Volta para o índice
+    // _currentPageIndex will automatically reflect the state of the new tab via the getter
     notifyListeners();
   }
 
@@ -223,52 +224,82 @@ class NotebookProvider extends ChangeNotifier {
   }
 
   // --- Paginação do Livro ---
-  int _currentPageIndex = -1; // -1 indica Índice (Lista)
-  int get currentPageIndex => _currentPageIndex;
+  // Store the current page index for each tab to restore when switching back
+  final Map<String, int> _tabPageIndices = {};
+
+  int get currentPageIndex {
+    if (_activeTab == null) return -1;
+    return _tabPageIndices[_activeTab!.id] ?? -1;
+  }
 
   void openPage(int index) {
+    if (_activeTab == null) return;
     if (index >= 0 && index < _pages.length) {
-      // Garante que o índice seja par para sempre abrir na página ESQUERDA da dupla
-      // Ex: Se clicar na pág 1 (índice 0), abre 0 e 1. Se clicar pág 2 (índice 1), abre 0 e 1?
-      // NÃO. Cada "folha" tem 2 páginas.
-      // O índice da lista é linear.
-      // Se eu tenho [A, B, C, D]
-      // Abrir A (0) -> Mostra A na Esquerda, B na Direita.
-      // Abrir B (1) -> Mostra A na Esquerda, B na Direita.
-      // Abrir C (2) -> Mostra C na Esquerda, D na Direita.
-
-      _currentPageIndex = (index ~/ 2) * 2;
+      final newIndex = (index ~/ 2) * 2;
+      _tabPageIndices[_activeTab!.id] = newIndex;
       notifyListeners();
     }
   }
 
   void closeBook() {
-    _currentPageIndex = -1;
+    if (_activeTab == null) return;
+    _tabPageIndices[_activeTab!.id] = -1;
     notifyListeners();
   }
 
   void nextPage() {
-    if (_currentPageIndex + 2 < _pages.length) {
-      _currentPageIndex += 2;
+    if (!hasNextPage) return;
+    if (_activeTab != null) {
+      // Ensure we have a starting value
+      int current = _tabPageIndices[_activeTab!.id] ?? -1;
+      _tabPageIndices[_activeTab!.id] = current + 2;
       notifyListeners();
     }
   }
 
   void previousPage() {
-    if (_currentPageIndex > 0) {
-      _currentPageIndex -= 2;
+    if (_activeTab == null) return;
+    int current = _tabPageIndices[_activeTab!.id] ?? -1;
+    if (current > 0) {
+      _tabPageIndices[_activeTab!.id] = current - 2;
       notifyListeners();
     } else {
       closeBook(); // Volta para o índice se voltar da primeira página
     }
   }
 
-  bool get hasNextPage => _currentPageIndex + 2 < _pages.length;
-  bool get hasPreviousPage => _currentPageIndex >= 0;
+  bool get hasNextPage {
+    if (_activeTab == null) return false;
+    int current = _tabPageIndices[_activeTab!.id] ?? -1;
+    return current + 2 < _pages.length;
+  }
 
+  bool get hasPreviousPage {
+    if (_activeTab == null) return false;
+    int current = _tabPageIndices[_activeTab!.id] ?? -1;
+    return current >= 0;
+  }
+
+  // --- Inspector / Overlay System ---
+  NotebookPage? _inspectorPage;
+  NotebookPage? get inspectorPage => _inspectorPage;
+
+  void openInInspector(NotebookPage page) {
+    _inspectorPage = page;
+    notifyListeners();
+  }
+
+  void closeInspector() {
+    _inspectorPage = null;
+    notifyListeners();
+  }
   // --- Fim Paginação ---
 
   Future<List<NotebookPage>> searchPages(String query) async {
     return await _dbService.searchPages(query);
+  }
+
+  Future<List<NotebookPage>> getPagesByTag(String tag) async {
+    return await _dbService.getPagesByTag(tag);
   }
 }
