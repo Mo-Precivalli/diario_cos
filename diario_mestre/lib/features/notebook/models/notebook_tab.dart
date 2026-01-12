@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:diario_mestre/core/theme/colors.dart';
 
 /// Modelo que representa uma aba do caderno
 class NotebookTab {
@@ -41,28 +42,28 @@ class NotebookTab {
       NotebookTab(
         id: 'now',
         name: 'O Agora',
-        color: const Color(0xFFD32F2F), // Red for Action/Immediate
+        color: AppColors.tabAction, // Red for Action/Immediate
         icon: Icons.bolt,
         order: 0,
       ),
       NotebookTab(
         id: 'world',
         name: 'O Mundo',
-        color: const Color(0xFF388E3C), // Green for World/Nature
+        color: AppColors.tabWorld, // Green for World/Nature
         icon: Icons.map,
         order: 1,
       ),
       NotebookTab(
         id: 'people',
         name: 'O Povo',
-        color: const Color(0xFF1976D2), // Blue for People
+        color: AppColors.tabPeople, // Blue for People
         icon: Icons.groups,
         order: 2,
       ),
       NotebookTab(
         id: 'past',
         name: 'O Passado',
-        color: const Color(0xFF795548), // Brown/Sepia for History
+        color: AppColors.tabHistory, // Brown/Sepia for History
         icon: Icons.history_edu,
         order: 3,
       ),

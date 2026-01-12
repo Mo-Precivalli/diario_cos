@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../models/notebook_page.dart';
-import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/providers/library_provider.dart';
+import 'package:diario_mestre/providers/book_navigation_provider.dart';
 import 'package:diario_mestre/core/theme/colors.dart';
+import 'package:diario_mestre/core/constants/app_layout.dart';
 
 import 'package:diario_mestre/shared/widgets/page_corner_button.dart'; // Importe o novo widget
 import 'package:diario_mestre/shared/widgets/tab_sidebar.dart'; // Importe o TabSidebar
 import 'package:diario_mestre/shared/widgets/alphabet_sidebar.dart'; // Importe o AlphabetSidebar
 import 'package:google_fonts/google_fonts.dart';
 import 'package:diario_mestre/features/library/widgets/card_grid.dart'; // Import CardGrid
-import '../widgets/flexible_page_editor.dart';
+import 'package:diario_mestre/features/monsters/models/monster_model.dart';
+import 'package:diario_mestre/features/notebook/widgets/flexible_page_editor.dart';
 import 'package:diario_mestre/shared/widgets/inspector_panel.dart';
 import 'package:diario_mestre/features/dashboard/screens/dashboard_view.dart';
 
@@ -29,15 +32,16 @@ class _NotebookViewState extends State<NotebookView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final provider = Provider.of<NotebookProvider>(context, listen: true);
+    final libraryProvider = Provider.of<LibraryProvider>(context, listen: true);
+
     // Auto-select first character if on Characters tab and nothing selected
-    if (provider.activeTab?.id == 'characters' &&
+    if (libraryProvider.activeTab?.id == 'characters' &&
         _selectedPage == null &&
-        provider.pages.isNotEmpty) {
+        libraryProvider.pages.isNotEmpty) {
       // Usando addPostFrameCallback para evitar erro de setState durante o build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          _selectedPage = provider.pages.first;
+          _selectedPage = libraryProvider.pages.first;
         });
       });
     }
@@ -45,212 +49,236 @@ class _NotebookViewState extends State<NotebookView> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NotebookProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading) {
+    return Consumer2<LibraryProvider, BookNavigationProvider>(
+      builder: (context, library, bookNav, child) {
+        if (library.isLoading) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.notebookFrame),
           );
         }
 
-        final isIndexMode = provider.currentPageIndex == -1;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // --- Dynamic Pagination Logic ---
+            // Calculate available height for the list
+            // Total Height - (Header + Padding + Bottom Nav/Padding)
+            final availableHeight =
+                constraints.maxHeight -
+                (40 + // Top Padding approx
+                    AppLayout.indexHeaderHeight +
+                    40); // Bottom Padding approx
 
-        // Dados da Página Esquerda (Selecionada ou Índice)
-        Widget leftContent;
-        if (isIndexMode) {
-          if (provider.activeTab?.id == 'now') {
-            // "O Agora" uses Dashboard as its "Index" or Main View
-            leftContent = const DashboardView();
-          } else if (provider.indexSpreadIndex == 0) {
-            leftContent = _buildEmptyState(provider.activeTab?.id);
-          } else {
-            final items = provider.getIndexPageChunk(
-              (provider.indexSpreadIndex * 2) - 1,
-            );
-            leftContent = _buildIndexList(context, provider, items);
-          }
-        } else {
-          // Modo Leitura: Página Esquerda (Index atual)
-          if (provider.currentPageIndex < provider.pages.length) {
-            final page = provider.pages[provider.currentPageIndex];
-            leftContent = _buildEditorForPage(provider, page);
-          } else {
-            leftContent = _buildEmptyState(provider.activeTab?.id);
-          }
-        }
+            // Calculate how many items fit
+            int pageSize = (availableHeight ~/ AppLayout.indexItemHeight)
+                .toInt();
+            // Ensure at least 1 item per page to avoid errors
+            if (pageSize < 1) pageSize = 1;
 
-        // Dados da Página Direita (Próxima ou Vazio)
-        Widget rightContent;
-        if (isIndexMode) {
-          final items = provider.getIndexPageChunk(
-            provider.indexSpreadIndex * 2,
-          );
-          rightContent = _buildIndexList(context, provider, items);
-        } else {
-          // Modo Leitura: Página Direita (Index + 1)
-          final rightIndex = provider.currentPageIndex + 1;
-          if (rightIndex < provider.pages.length) {
-            final page = provider.pages[rightIndex];
-            rightContent = _buildEditorForPage(provider, page);
-          } else {
-            // Se não tem página na direita, mostramos uma página "Rascunho"
-            // que permite escrever e criar uma nova página automaticamente ao salvar.
-            final draftPage = NotebookPage(
-              id: '', // ID vazio indica que é uma nova página
-              tabId: provider.activeTab?.id ?? '',
-              title: '',
-              content: provider.activeTab?.id == 'monsters'
-                  ? '{"name": "", "size": "Médio", "type": "Humanóide", "alignment": "Neutro", "armor_class": 10, "hit_points": 10, "hit_dice": "2d8 + 2", "speed": "30 ft.", "stats": {"for": 10, "des": 10, "con": 10, "int": 10, "sab": 10, "car": 10}, "abilities": [], "actions": []}'
-                  : '[]',
-              order: provider.pages.length,
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            );
-            rightContent = _buildEditorForPage(provider, draftPage);
-          }
-        }
+            final tabId = library.activeTab?.id ?? '';
+            final currentPageIndex = bookNav.getCurrentPageIndex(tabId);
+            final isIndexMode = currentPageIndex == -1;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.notebookFrame, // Capa do livro
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(16), // Margem da capa
-          child: Stack(
-            children: [
-              Column(
-                children: [
-                  // Barra de Navegação Superior (Back / Next / Prev)
-                  // Navegação removida do topo (movida para as laterais)
-                  if (!isIndexMode) const SizedBox(height: 10),
+            // Dados da Página Esquerda (Selecionada ou Índice)
+            Widget leftContent;
+            if (isIndexMode) {
+              if (library.activeTab?.id == 'now') {
+                leftContent = const DashboardView();
+              } else if (bookNav.indexSpreadIndex == 0) {
+                leftContent = _buildEmptyState(library.activeTab?.id);
+              } else {
+                final items = bookNav.getIndexPageChunk(
+                  library.filteredPages,
+                  (bookNav.indexSpreadIndex * 2) - 1,
+                  pageSize,
+                );
+                leftContent = _buildIndexList(context, library, bookNav, items);
+              }
+            } else {
+              if (currentPageIndex < library.pages.length) {
+                final page = library.pages[currentPageIndex];
+                leftContent = _buildEditorForPage(library, bookNav, page);
+              } else {
+                leftContent = _buildEmptyState(library.activeTab?.id);
+              }
+            }
 
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment
-                          .stretch, // Ensure sidebars fill height
-                      children: [
-                        // --- SIDEBAR DE ALFABETO (ESQUERDA) ---
-                        const AlphabetSidebar(),
+            // Dados da Página Direita (Próxima ou Vazio)
+            Widget rightContent;
+            if (isIndexMode) {
+              final items = bookNav.getIndexPageChunk(
+                library.filteredPages,
+                bookNav.indexSpreadIndex * 2,
+                pageSize,
+              );
+              rightContent = _buildIndexList(context, library, bookNav, items);
+            } else {
+              final rightIndex = currentPageIndex + 1;
+              if (rightIndex < library.pages.length) {
+                final page = library.pages[rightIndex];
+                rightContent = _buildEditorForPage(library, bookNav, page);
+              } else {
+                final draftPage = NotebookPage(
+                  id: '',
+                  tabId: library.activeTab?.id ?? '',
+                  title: '',
+                  content: library.activeTab?.id == 'monsters'
+                      ? MonsterModel.defaultFor('').toJson()
+                      : '[]',
+                  order: library.pages.length,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                );
+                rightContent = _buildEditorForPage(library, bookNav, draftPage);
+              }
+            }
 
-                        // --- PÁGINA ESQUERDA ---
-                        Expanded(
-                          flex: 1,
-                          child: Stack(
-                            children: [
-                              // Camadas de páginas (Volume)
-                              _buildPageVolume(isLeft: true),
-                              // Conteúdo
-                              Positioned.fill(
-                                child: _buildPageSurface(
-                                  child: leftContent,
-                                  isLeft: true,
-                                ),
-                              ),
-
-                              // Navegação: Voltar (Índice ou Páginas)
-                              Positioned(
-                                left: 0,
-                                bottom: 0,
-                                width: 60,
-                                height: 60,
-                                child: PageCornerButton(
-                                  key: ValueKey(
-                                    'corner_left_${isIndexMode ? provider.indexSpreadIndex : provider.currentPageIndex}',
-                                  ),
-                                  isLeft: true,
-                                  onTap: isIndexMode
-                                      ? provider.prevIndexSpread
-                                      : provider.previousPage,
-                                  visible: isIndexMode
-                                      ? provider.canGoPrevIndexSpread
-                                      : provider.hasPreviousPage,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // --- DOBRA CENTRAL (LOMBADA) ---
-                        Container(width: 2, color: Colors.grey.shade400),
-
-                        // --- PÁGINA DIREITA ---
-                        Expanded(
-                          flex: 1,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              // Camadas de páginas (Volume)
-                              _buildPageVolume(isLeft: false),
-                              // Conteúdo
-                              Positioned.fill(
-                                child: _buildPageSurface(
-                                  child: rightContent,
-                                  isLeft: false,
-                                ),
-                              ),
-
-                              // Navegação: Avançar (Índice ou Páginas)
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                width: 60,
-                                height: 60,
-                                child: PageCornerButton(
-                                  key: ValueKey(
-                                    'corner_right_${isIndexMode ? provider.indexSpreadIndex : provider.currentPageIndex}',
-                                  ),
-                                  isLeft: false,
-                                  onTap: isIndexMode
-                                      ? provider.nextIndexSpread
-                                      : provider.nextPage,
-                                  visible: isIndexMode
-                                      ? provider.canGoNextIndexSpread
-                                      : provider.hasNextPage,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // --- ABAS LATERAIS ---
-                        const TabSidebar(),
-                      ],
-                    ),
+            return Container(
+              decoration: BoxDecoration(
+                color: AppColors.notebookFrame,
+                borderRadius: BorderRadius.circular(AppLayout.bookBorderRadius),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
-              // --- INSPECTOR PANEL OVERLAY ---
-              if (provider.inspectorPage != null)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: InspectorPanel(
-                    page: provider.inspectorPage,
-                    onClose: provider.closeInspector,
-                    onSave: (updatedPage) async {
-                      await provider.updatePage(updatedPage);
-                    },
+              padding: const EdgeInsets.all(16),
+              child: Stack(
+                children: [
+                  Column(
+                    children: [
+                      if (!isIndexMode) const SizedBox(height: 10),
+
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const AlphabetSidebar(),
+
+                            // --- PÁGINA ESQUERDA ---
+                            Expanded(
+                              flex: 1,
+                              child: Stack(
+                                children: [
+                                  _buildPageVolume(isLeft: true),
+                                  Positioned.fill(
+                                    child: _buildPageSurface(
+                                      child: leftContent,
+                                      isLeft: true,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    left: 0,
+                                    bottom: 0,
+                                    width: 60,
+                                    height: 60,
+                                    child: PageCornerButton(
+                                      key: ValueKey(
+                                        'corner_left_${isIndexMode ? bookNav.indexSpreadIndex : currentPageIndex}',
+                                      ),
+                                      isLeft: true,
+                                      onTap: isIndexMode
+                                          ? bookNav.prevIndexSpread
+                                          : () => bookNav.prevPage(tabId),
+                                      visible: isIndexMode
+                                          ? (bookNav.indexSpreadIndex > 0)
+                                          : bookNav.hasPreviousPage(tabId),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // --- DOBRA CENTRAL (LOMBADA) ---
+                            Container(width: 2, color: Colors.grey.shade400),
+
+                            // --- PÁGINA DIREITA ---
+                            Expanded(
+                              flex: 1,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  _buildPageVolume(isLeft: false),
+                                  Positioned.fill(
+                                    child: _buildPageSurface(
+                                      child: rightContent,
+                                      isLeft: false,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    width: 60,
+                                    height: 60,
+                                    child: PageCornerButton(
+                                      key: ValueKey(
+                                        'corner_right_${isIndexMode ? bookNav.indexSpreadIndex : currentPageIndex}',
+                                      ),
+                                      isLeft: false,
+                                      onTap: isIndexMode
+                                          ? () => bookNav.nextIndexSpread(
+                                              library.filteredPages.length,
+                                              pageSize,
+                                            )
+                                          : () => bookNav.nextPage(
+                                              tabId,
+                                              library.pages.length,
+                                            ),
+                                      visible: isIndexMode
+                                          ? ((bookNav.indexSpreadIndex * 2 +
+                                                        1) *
+                                                    pageSize <
+                                                library.filteredPages.length)
+                                          : bookNav.hasNextPage(
+                                              tabId,
+                                              library.pages.length,
+                                            ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const TabSidebar(),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-            ],
-          ),
+                  if (bookNav.inspectorPage != null)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: InspectorPanel(
+                        page: bookNav.inspectorPage,
+                        onClose: bookNav.closeInspector,
+                        onSave: (updatedPage) async {
+                          await library.updatePage(updatedPage);
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildEditorForPage(NotebookProvider provider, NotebookPage page) {
+  Widget _buildEditorForPage(
+    LibraryProvider library,
+    BookNavigationProvider bookNav,
+    NotebookPage page,
+  ) {
     // Determine if right side for focus logic (heuristic)
+    final tabId = library.activeTab?.id ?? '';
+    final currentPageIndex = bookNav.getCurrentPageIndex(tabId);
     final isRightSide =
-        provider.pages.indexOf(page) == (provider.currentPageIndex + 1) ||
+        library.pages.indexOf(page) == (currentPageIndex + 1) ||
         page.id.isEmpty;
 
     return FlexiblePageEditor(
@@ -259,23 +287,23 @@ class _NotebookViewState extends State<NotebookView> {
       showFormatButton: !page.isContinuation,
       shouldFocus: _pageIdToFocus == page.id,
       onNavigate: (title) async {
-        final results = await provider.searchPages(title);
+        final results = await library.searchPages(title);
         if (results.isNotEmpty) {
           final target = results.firstWhere(
             (p) => p.title.toLowerCase() == title.toLowerCase(),
             orElse: () => results.first,
           );
-          if (provider.activeTab?.id != target.tabId) {
+          if (library.activeTab?.id != target.tabId) {
             try {
-              final targetTab = provider.tabs.firstWhere(
+              final targetTab = library.tabs.firstWhere(
                 (t) => t.id == target.tabId,
               );
-              await provider.setActiveTab(targetTab);
+              await library.setActiveTab(targetTab);
             } catch (_) {}
           }
-          final index = provider.pages.indexWhere((p) => p.id == target.id);
+          final index = library.pages.indexWhere((p) => p.id == target.id);
           if (index != -1) {
-            provider.openPage(index);
+            bookNav.openPage(target.tabId, index, library.pages.length);
           }
         } else {
           if (mounted) {
@@ -293,16 +321,16 @@ class _NotebookViewState extends State<NotebookView> {
         if (!isRightSide) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             // Move to Right Page
-            if (provider.currentPageIndex + 1 < provider.pages.length) {
-              final nextPage = provider.pages[provider.currentPageIndex + 1];
-              await _appendTextToPage(provider, nextPage, textToMove);
+            if (currentPageIndex + 1 < library.pages.length) {
+              final nextPage = library.pages[currentPageIndex + 1];
+              await _appendTextToPage(library, nextPage, textToMove);
               setState(() => _pageIdToFocus = nextPage.id);
             } else {
               // Create new page on right
-              await provider.createPage('', isContinuation: true);
-              if (provider.currentPageIndex + 1 < provider.pages.length) {
-                final nextPage = provider.pages[provider.currentPageIndex + 1];
-                await _appendTextToPage(provider, nextPage, textToMove);
+              await library.createPage('', isContinuation: true);
+              if (currentPageIndex + 1 < library.pages.length) {
+                final nextPage = library.pages[currentPageIndex + 1];
+                await _appendTextToPage(library, nextPage, textToMove);
                 setState(() => _pageIdToFocus = nextPage.id);
               }
             }
@@ -311,12 +339,12 @@ class _NotebookViewState extends State<NotebookView> {
       },
       onSave: (updatedPage, {bool silent = false}) async {
         if (updatedPage.id.isEmpty) {
-          await provider.createPageFromObject(updatedPage);
+          await library.createPageFromObject(updatedPage);
         } else {
           if (silent) {
-            await provider.updatePageSilent(updatedPage);
+            await library.updatePageSilent(updatedPage);
           } else {
-            await provider.updatePage(updatedPage);
+            await library.updatePage(updatedPage);
           }
         }
       },
@@ -393,11 +421,11 @@ class _NotebookViewState extends State<NotebookView> {
           begin: isLeft ? Alignment.centerRight : Alignment.centerLeft,
           end: isLeft ? Alignment.centerLeft : Alignment.centerRight,
           colors: [
-            const Color(0xFFE5DECF),
-            const Color(0xFFF5F0E1),
+            AppColors.pageGradientStart,
+            AppColors.pageGradientMid1,
             AppColors.notebookPage,
             AppColors.notebookPage,
-            const Color(0xFFF1EAD8),
+            AppColors.pageGradientMid2,
           ],
           stops: const [0.0, 0.05, 0.2, 0.9, 1.0],
         ),
@@ -476,7 +504,7 @@ class _NotebookViewState extends State<NotebookView> {
     );
   }
 
-  void _showNewPageDialog(BuildContext context, NotebookProvider provider) {
+  void _showNewPageDialog(BuildContext context, LibraryProvider library) {
     final controller = TextEditingController();
 
     showDialog(
@@ -499,7 +527,7 @@ class _NotebookViewState extends State<NotebookView> {
           ElevatedButton(
             onPressed: () async {
               if (controller.text.trim().isNotEmpty) {
-                await provider.createPage(controller.text.trim());
+                await library.createPage(controller.text.trim());
                 if (context.mounted) Navigator.pop(context);
               }
             },
@@ -512,13 +540,13 @@ class _NotebookViewState extends State<NotebookView> {
 
   Widget _buildIndexList(
     BuildContext context,
-    NotebookProvider provider,
+    LibraryProvider library,
+    BookNavigationProvider bookNav,
     List<NotebookPage> items,
   ) {
     // Se for uma aba de Cards (Itens ou Magia), retorna o Grid diretamente
-    if (provider.activeTab?.id == 'items' ||
-        provider.activeTab?.id == 'spells') {
-      return CardGrid(activeLetter: provider.selectedLetter ?? '');
+    if (library.activeTab?.id == 'items' || library.activeTab?.id == 'spells') {
+      return CardGrid(activeLetter: library.selectedLetter ?? '');
     }
 
     return Column(
@@ -536,7 +564,7 @@ class _NotebookViewState extends State<NotebookView> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                provider.activeTab?.name ?? 'Caderno',
+                library.activeTab?.name ?? 'Caderno',
                 style: GoogleFonts.libreBaskerville(
                   color: AppColors.textDark,
                   fontSize: 28,
@@ -549,14 +577,14 @@ class _NotebookViewState extends State<NotebookView> {
                   // Botão de Deletar / Confirmar Deleção
                   InkWell(
                     onTap: () {
-                      if (provider.isDeleteMode) {
+                      if (library.isDeleteMode) {
                         // Se já está no modo delete, ao clicar novamente na lixeira, deleta os itens
-                        if (provider.selectedPagesToDelete.isNotEmpty) {
+                        if (library.selectedPagesToDelete.isNotEmpty) {
                           showDialog(
                             context: context,
                             builder: (ctx) => AlertDialog(
                               title: Text(
-                                'Excluir ${provider.selectedPagesToDelete.length} itens?',
+                                'Excluir ${library.selectedPagesToDelete.length} itens?',
                                 style: GoogleFonts.lato(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -576,7 +604,7 @@ class _NotebookViewState extends State<NotebookView> {
                                 TextButton(
                                   onPressed: () {
                                     Navigator.of(ctx).pop();
-                                    provider.deleteSelectedPages();
+                                    library.deleteSelectedPages();
                                   },
                                   child: Text(
                                     'Excluir',
@@ -588,11 +616,11 @@ class _NotebookViewState extends State<NotebookView> {
                           );
                         } else {
                           // Se nada selecionado, apenas sai do modo
-                          provider.exitDeleteMode();
+                          library.exitDeleteMode();
                         }
                       } else {
                         // Entra no modo delete
-                        provider.toggleDeleteMode();
+                        library.toggleDeleteMode();
                       }
                     },
                     borderRadius: BorderRadius.circular(20),
@@ -602,11 +630,11 @@ class _NotebookViewState extends State<NotebookView> {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Icon(
-                        provider.isDeleteMode
+                        library.isDeleteMode
                             ? Icons.delete
                             : Icons.delete_outline,
                         size: 20,
-                        color: provider.isDeleteMode
+                        color: library.isDeleteMode
                             ? Colors.red
                             : AppColors.textLight,
                       ),
@@ -616,7 +644,7 @@ class _NotebookViewState extends State<NotebookView> {
                   // Botão Adicionar (Só aparece se NÃO estiver deletando)
                   // Usando Visibility com maintainSize para não mover a lixeira de lugar
                   Visibility(
-                    visible: !provider.isDeleteMode,
+                    visible: !library.isDeleteMode,
                     maintainSize: true,
                     maintainAnimation: true,
                     maintainState: true,
@@ -625,7 +653,7 @@ class _NotebookViewState extends State<NotebookView> {
                       children: [
                         const SizedBox(width: 8),
                         InkWell(
-                          onTap: () => _showNewPageDialog(context, provider),
+                          onTap: () => _showNewPageDialog(context, library),
                           borderRadius: BorderRadius.circular(20),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -664,7 +692,7 @@ class _NotebookViewState extends State<NotebookView> {
             child: items.isEmpty
                 ? Center(
                     child: Text(
-                      items.isEmpty && provider.filteredPages.isNotEmpty
+                      items.isEmpty && library.filteredPages.isNotEmpty
                           ? '' // Empty page in a book context
                           : 'Vazio...',
                       style: const TextStyle(
@@ -683,21 +711,26 @@ class _NotebookViewState extends State<NotebookView> {
                           .toList();
                       final page = visibleItems[index];
                       // ...rest of the builder logic
-                      final realIndex = provider.pages.indexOf(page);
-                      final isSelected = provider.selectedPagesToDelete
-                          .contains(page.id);
+                      final realIndex = library.pages.indexOf(page);
+                      final isSelected = library.selectedPagesToDelete.contains(
+                        page.id,
+                      );
 
                       return InkWell(
                         onTap: () {
-                          if (provider.isDeleteMode) {
-                            provider.togglePageSelection(page.id);
+                          if (library.isDeleteMode) {
+                            library.togglePageSelection(page.id);
                           } else {
-                            provider.openPage(realIndex);
+                            bookNav.openPage(
+                              library.activeTab?.id ?? '',
+                              realIndex,
+                              library.pages.length,
+                            );
                           }
                         },
                         onLongPress: () {
-                          if (!provider.isDeleteMode) {
-                            provider.openInInspector(page);
+                          if (!library.isDeleteMode) {
+                            bookNav.openInInspector(page);
                           }
                         },
                         hoverColor: Colors.transparent, // Sem cor de hover
@@ -723,7 +756,7 @@ class _NotebookViewState extends State<NotebookView> {
                                     color: AppColors.textDark,
                                     fontSize: 16,
                                     decoration:
-                                        (provider.isDeleteMode && isSelected)
+                                        (library.isDeleteMode && isSelected)
                                         ? TextDecoration.lineThrough
                                         : null,
                                   ),
@@ -738,7 +771,7 @@ class _NotebookViewState extends State<NotebookView> {
 
                               // Checkbox na direita (sempre ocupa espaço para não mover o texto)
                               Visibility(
-                                visible: provider.isDeleteMode,
+                                visible: library.isDeleteMode,
                                 maintainSize: true,
                                 maintainAnimation: true,
                                 maintainState: true,
@@ -747,7 +780,7 @@ class _NotebookViewState extends State<NotebookView> {
                                   child: Checkbox(
                                     value: isSelected,
                                     onChanged: (_) =>
-                                        provider.togglePageSelection(page.id),
+                                        library.togglePageSelection(page.id),
                                     activeColor: AppColors.monsterSheetAccent,
                                     materialTapTargetSize:
                                         MaterialTapTargetSize.shrinkWrap,
@@ -768,7 +801,7 @@ class _NotebookViewState extends State<NotebookView> {
   }
 
   Future<void> _appendTextToPage(
-    NotebookProvider provider,
+    LibraryProvider library,
     NotebookPage page,
     String textToAppend,
   ) async {
@@ -802,12 +835,9 @@ class _NotebookViewState extends State<NotebookView> {
 
       final newContent = jsonEncode(jsonDetail);
 
-      final updatedPage = page.copyWith(
-        content: newContent,
-        updatedAt: DateTime.now(),
+      await library.updatePage(
+        page.copyWith(content: newContent, updatedAt: DateTime.now()),
       );
-
-      await provider.updatePage(updatedPage);
     } catch (e) {
       debugPrint('Error appending text: $e');
     }

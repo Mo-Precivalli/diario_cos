@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/monster_model.dart';
 import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
-import 'package:diario_mestre/providers/notebook_provider.dart'; // Import Provider
+import 'package:diario_mestre/providers/book_navigation_provider.dart'; // Import Provider
 import 'package:diario_mestre/core/theme/colors.dart';
 import '../widgets/stat_block_decoration.dart';
 
@@ -136,7 +136,7 @@ class _MonsterEditorState extends State<MonsterEditor> {
                         tooltip: 'Voltar para o Índice',
                         onPressed: () {
                           // Fecha o livro (volta para o índice geral)
-                          Provider.of<NotebookProvider>(
+                          Provider.of<BookNavigationProvider>(
                             context,
                             listen: false,
                           ).closeBook();
@@ -359,7 +359,7 @@ class _MonsterEditorState extends State<MonsterEditor> {
       decoration: BoxDecoration(
         color: isMental
             ? AppColors.primaryBlue.withValues(alpha: 0.15)
-            : const Color(0xFFF7F2E0),
+            : AppColors.monsterStatBackground,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
       ),
@@ -886,7 +886,7 @@ class _MonsterEditorState extends State<MonsterEditor> {
             label,
             style: GoogleFonts.libreBaskerville(
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF2E7D32), // Verde estilo D&D 5e
+              color: AppColors.monsterStatGreen, // Verde estilo D&D 5e
             ),
           ),
           Expanded(

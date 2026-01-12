@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:diario_mestre/features/notebook/models/notebook_tab.dart';
-import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/providers/library_provider.dart';
 import 'package:diario_mestre/core/theme/colors.dart'; // Import AppColors
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,7 +10,7 @@ class TabSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NotebookProvider>(
+    return Consumer<LibraryProvider>(
       builder: (context, provider, child) {
         return Container(
           width: 50,

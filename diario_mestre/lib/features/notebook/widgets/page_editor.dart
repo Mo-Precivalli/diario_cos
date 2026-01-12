@@ -3,7 +3,7 @@ import 'dart:async'; // Auto-save
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'dart:convert';
 import '../models/notebook_page.dart';
-import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/providers/book_navigation_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:diario_mestre/core/theme/colors.dart';
@@ -383,7 +383,7 @@ class _PageEditorState extends State<PageEditor> {
                         ), // Cor dourada
                         onPressed: () {
                           _removeSidebarOverlay();
-                          Provider.of<NotebookProvider>(
+                          Provider.of<BookNavigationProvider>(
                             context,
                             listen: false,
                           ).closeBook();

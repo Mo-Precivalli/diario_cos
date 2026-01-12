@@ -1,10 +1,14 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
-import 'package:diario_mestre/features/notebook/models/notebook_tab.dart';
+import 'package:diario_mestre/core/data/notebook_repository.dart';
 import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_tab.dart';
 
-class DatabaseService {
-  static Database? _database;
+class DatabaseService implements NotebookRepository {
+  Database? _database;
+  final String _dbName;
+
+  DatabaseService({String? dbName}) : _dbName = dbName ?? 'diario_mestre.db';
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -18,7 +22,9 @@ class DatabaseService {
     databaseFactory = databaseFactoryFfi;
 
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'diario_mestre.db');
+    final path = _dbName == inMemoryDatabasePath
+        ? _dbName
+        : join(dbPath, _dbName);
 
     final db = await openDatabase(path, version: 1, onCreate: _onCreate);
 
@@ -196,6 +202,7 @@ class DatabaseService {
   }
 
   // CRUD Tabs
+  @override
   Future<List<NotebookTab>> getTabs() async {
     final db = await database;
     final result = await db.query('tabs', orderBy: 'sort_order ASC');
@@ -213,6 +220,7 @@ class DatabaseService {
   }
 
   // CRUD Pages
+  @override
   Future<String> createPage(NotebookPage page) async {
     final db = await database;
     await db.insert('pages', {
@@ -231,6 +239,7 @@ class DatabaseService {
     return page.id;
   }
 
+  @override
   Future<List<NotebookPage>> getPagesByTab(String tabId) async {
     final db = await database;
     final result = await db.query(
@@ -258,6 +267,7 @@ class DatabaseService {
         .toList();
   }
 
+  @override
   Future<void> updatePage(NotebookPage page) async {
     final db = await database;
     await db.update(
@@ -277,11 +287,13 @@ class DatabaseService {
     );
   }
 
+  @override
   Future<void> deletePage(String pageId) async {
     final db = await database;
     await db.delete('pages', where: 'id = ?', whereArgs: [pageId]);
   }
 
+  @override
   Future<List<NotebookPage>> searchPages(String query) async {
     final db = await database;
     final result = await db.query(
@@ -309,6 +321,7 @@ class DatabaseService {
         .toList();
   }
 
+  @override
   Future<List<NotebookPage>> getPagesByTag(String tag) async {
     final db = await database;
     // Tags are stored as "tag1,tag2,tag3"

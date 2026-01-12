@@ -34,6 +34,21 @@ class AppColors {
   static const Color tabItems = Color(0xFF7B9AB0);
   static const Color tabSpells = Color(0xFF5E7A91); // Cor para Magia
   static const Color tabRules = Color(0xFF5E7A91);
+
+  // Semantics for Tabs
+  static const Color tabAction = Color(0xFFD32F2F); // Red
+  static const Color tabWorld = Color(0xFF388E3C); // Green
+  static const Color tabPeople = Color(0xFF1976D2); // Blue
+  static const Color tabHistory = Color(0xFF795548); // Brown
+
+  // Page Gradient
+  static const Color pageGradientStart = Color(0xFFE5DECF);
+  static const Color pageGradientMid1 = Color(0xFFF5F0E1);
+  static const Color pageGradientMid2 = Color(0xFFF1EAD8);
+
+  // More Monster Sheet Colors
+  static const Color monsterStatBackground = Color(0xFFF7F2E0);
+  static const Color monsterStatGreen = Color(0xFF2E7D32);
 }
 
 class AppTheme {

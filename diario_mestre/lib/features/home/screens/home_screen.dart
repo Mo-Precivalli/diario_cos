@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/providers/book_navigation_provider.dart';
+import 'package:diario_mestre/providers/notification_provider.dart';
+import 'package:diario_mestre/providers/library_provider.dart';
 import '../widgets/book_cover.dart'; // Import da capa
 import 'package:diario_mestre/features/notebook/screens/notebook_view.dart';
 import 'package:diario_mestre/core/theme/colors.dart';
@@ -18,7 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  bool _isBookOpen = false;
+  // bool _isBookOpen = false; // Moved to Provider
 
   @override
   void initState() {
@@ -30,28 +32,67 @@ class _HomeScreenState extends State<HomeScreen>
 
     // Inicializar o provider após o primeiro frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotebookProvider>(context, listen: false).initialize();
+      Provider.of<LibraryProvider>(context, listen: false).initialize();
+      // Sync initial state if needed, or listener
+      final nav = Provider.of<BookNavigationProvider>(context, listen: false);
+      nav.addListener(_onBookStateChanged);
+
+      final notif = Provider.of<NotificationProvider>(context, listen: false);
+      notif.addListener(_onNotification);
     });
   }
 
   @override
   void dispose() {
+    // Remove listener if we had a reference, but context might be unsafe.
+    // Usually fine for singleton providers or we rely on cleaning up structure.
+    // Ideally we'd keep a reference to 'nav' to remove listener.
     _controller.dispose();
     super.dispose();
   }
 
-  void _openBook() {
-    setState(() {
-      _isBookOpen = true;
+  void _onBookStateChanged() {
+    if (!mounted) return;
+    final isOpen = Provider.of<BookNavigationProvider>(
+      context,
+      listen: false,
+    ).isBookOpen;
+    if (isOpen &&
+        _controller.status != AnimationStatus.completed &&
+        _controller.status != AnimationStatus.forward) {
       _controller.forward();
-    });
+    } else if (!isOpen &&
+        _controller.status != AnimationStatus.dismissed &&
+        _controller.status != AnimationStatus.reverse) {
+      _controller.reverse();
+    }
+  }
+
+  void _onNotification() {
+    if (!mounted) return;
+    final provider = Provider.of<NotificationProvider>(context, listen: false);
+    final msg = provider.latestMessage;
+    if (msg != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            msg.message,
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: msg.isError ? Colors.redAccent : Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      provider.clear();
+    }
+  }
+
+  void _openBook() {
+    Provider.of<BookNavigationProvider>(context, listen: false).openBook();
   }
 
   void _closeBook() {
-    setState(() {
-      _isBookOpen = false;
-      _controller.reverse();
-    });
+    Provider.of<BookNavigationProvider>(context, listen: false).closeBook();
   }
 
   @override
@@ -77,12 +118,17 @@ class _HomeScreenState extends State<HomeScreen>
         ), // AppBar combina com a mesa
         elevation: 0,
         actions: [
-          if (_isBookOpen) // Só mostra ações se o livro estiver aberto
-            IconButton(
-              icon: const Icon(Icons.close, color: AppColors.accentGold),
-              onPressed: _closeBook,
-              tooltip: 'Fechar Livro',
-            ),
+          // Watch provider for UI updates
+          Consumer<BookNavigationProvider>(
+            builder: (context, nav, child) {
+              if (!nav.isBookOpen) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.close, color: AppColors.accentGold),
+                onPressed: _closeBook,
+                tooltip: 'Fechar Livro',
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.accentGold),
             onPressed: () {},

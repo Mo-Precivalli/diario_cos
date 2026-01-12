@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:diario_mestre/core/theme/colors.dart';
+import 'package:diario_mestre/core/constants/app_layout.dart';
 
 class BookCoverView extends StatefulWidget {
   final VoidCallback onOpen;
@@ -57,8 +58,8 @@ class _BookCoverViewState extends State<BookCoverView>
               decoration: BoxDecoration(
                 color: AppColors.notebookFrame, // Blue/Slate base
                 borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
+                  topRight: Radius.circular(AppLayout.bookBorderRadius),
+                  bottomRight: Radius.circular(AppLayout.bookBorderRadius),
                   topLeft: Radius.circular(4), // Spine side
                   bottomLeft: Radius.circular(4), // Spine side
                 ),
@@ -104,7 +105,7 @@ class _BookCoverViewState extends State<BookCoverView>
                   // Decorative Border
                   Positioned.fill(
                     child: Padding(
-                      padding: const EdgeInsets.all(32.0),
+                      padding: const EdgeInsets.all(AppLayout.coverPadding),
                       child: Stack(
                         children: [
                           // Sombra/Borda preta de fundo (Outline)
@@ -160,7 +161,7 @@ class _BookCoverViewState extends State<BookCoverView>
                             // Outline Preto (Simulado com sombra forte)
                             Icon(
                               Icons.pets,
-                              size: 100,
+                              size: AppLayout.coverIconSize,
                               color: Colors
                                   .transparent, // Transparente, só a sombra aparece
                               shadows: [
@@ -189,8 +190,8 @@ class _BookCoverViewState extends State<BookCoverView>
                             // Ícone Dourado
                             const Icon(
                               Icons.pets,
-                              size: 100,
-                              color: Color(0xFFD4AF37),
+                              size: AppLayout.coverIconSize,
+                              color: AppColors.accentGold,
                             ),
                           ],
                         ),
@@ -203,7 +204,7 @@ class _BookCoverViewState extends State<BookCoverView>
                           style: GoogleFonts.libreBaskerville(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFFD4AF37),
+                            color: AppColors.accentGold,
                             letterSpacing: 1.5,
                             shadows: [
                               // Outline simples usando shadows
@@ -260,7 +261,7 @@ class _BookCoverViewState extends State<BookCoverView>
       child: Icon(
         Icons.pets,
         size: 24,
-        color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
+        color: AppColors.accentGold.withValues(alpha: 0.6),
         shadows: [
           Shadow(
             offset: const Offset(0.5, 0.5),

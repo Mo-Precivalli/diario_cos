@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import 'package:diario_mestre/providers/notebook_provider.dart';
-import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
 import 'package:diario_mestre/core/theme/colors.dart';
+import 'package:provider/provider.dart';
+import 'package:diario_mestre/providers/library_provider.dart';
+import 'package:diario_mestre/providers/book_navigation_provider.dart';
+import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -24,21 +25,19 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Future<void> _loadNotes() async {
-    final provider = Provider.of<NotebookProvider>(context, listen: false);
+    final library = Provider.of<LibraryProvider>(context, listen: false);
     // Find or create the dashboard notes page
     try {
-      final pages = await provider.databaseService.searchPages(
-        'Dashboard Quick Notes',
-      );
+      final pages = await library.searchPages('Dashboard Quick Notes');
       if (pages.isNotEmpty) {
         _notesPage = pages.first;
         _notesController.text = _extractText(_notesPage!.content);
       } else {
         // Create it
-        await provider.createPage('Dashboard Quick Notes');
+        await library.createPage('Dashboard Quick Notes');
         // creation is async, refresh list to find it
         try {
-          _notesPage = provider.pages.firstWhere(
+          _notesPage = library.pages.firstWhere(
             (p) => p.title == 'Dashboard Quick Notes',
           );
         } catch (_) {}
@@ -64,7 +63,7 @@ class _DashboardViewState extends State<DashboardView> {
 
   // --- Helper to toggle tag 'Cena' ---
   Future<void> _toggleCenaTag(NotebookPage page) async {
-    final provider = Provider.of<NotebookProvider>(context, listen: false);
+    final library = Provider.of<LibraryProvider>(context, listen: false);
     final List<String> newTags = List.from(page.tags);
     if (newTags.contains('Cena')) {
       newTags.remove('Cena');
@@ -72,14 +71,25 @@ class _DashboardViewState extends State<DashboardView> {
       newTags.add('Cena');
     }
     final updatedPage = page.copyWith(tags: newTags);
-    await provider.updatePage(updatedPage);
+    await library.updatePage(updatedPage);
     setState(() {});
   }
 
   void _showAddCharacterDialog() async {
-    final provider = Provider.of<NotebookProvider>(context, listen: false);
+    final library = Provider.of<LibraryProvider>(context, listen: false);
     // Load all 'people' pages
-    final peoplePages = await provider.databaseService.getPagesByTab('people');
+    // Using library helper if available, or repository via helper
+    // Library provider might not have a direct 'getPagesByTab' public method that just returns list without setting state.
+    // Actually LibraryProvider has loadPages but that sets state.
+    // We can use helper or exposing repository?
+    // Ideally LibraryProvider should expose getPagesByTab logic or we just temporarily swap active tab? No.
+    // Let's use `getPagesByTab` from repository if exposed, OR `library.getPagesByTab` (Wait, library provider usually doesn't expose raw get).
+    // Looking at LibraryProvider, it has `loadPages` which sets `_pages`.
+    // It has `_repository`. We might need to add a public accessor or helper in `LibraryProvider` for this dialog.
+    // For now, let's assume LibraryProvider exposes `repository` OR we add a method `fetchPagesByTab` to LibraryProvider.
+    // Let's add `fetchPagesByTab` to LibraryProvider in next step if needed.
+    // Wait, I saw `Future<List<NotebookPage>> getPagesByTab(String tag) => _repository.getPagesByTag(tag);` in LibraryProvider?
+    final peoplePages = await library.getPagesByTab('people');
 
     if (!mounted) return;
 
@@ -162,10 +172,10 @@ class _DashboardViewState extends State<DashboardView> {
           const SizedBox(height: 12),
           SizedBox(
             height: 110,
-            child: Consumer<NotebookProvider>(
-              builder: (context, provider, child) {
+            child: Consumer<LibraryProvider>(
+              builder: (context, library, child) {
                 return FutureBuilder<List<NotebookPage>>(
-                  future: provider.getPagesByTag('Cena'),
+                  future: library.getPagesByTag('Cena'),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const Center(
@@ -247,7 +257,7 @@ class _DashboardViewState extends State<DashboardView> {
   Widget _buildCompactCharCard(NotebookPage page) {
     return InkWell(
       onTap: () {
-        Provider.of<NotebookProvider>(
+        Provider.of<BookNavigationProvider>(
           context,
           listen: false,
         ).openInInspector(page);
@@ -260,7 +270,7 @@ class _DashboardViewState extends State<DashboardView> {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFFDF1DC), // Monster sheet bg
+          color: AppColors.monsterSheetBackground, // Monster sheet bg
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(

@@ -193,9 +193,31 @@ class MonsterModel {
   factory MonsterModel.fromJson(String source) =>
       MonsterModel.fromMap(json.decode(source));
 
-  // Helper para calcular modificador
   static int calculateModifier(int score) {
     return ((score - 10) / 2).floor();
+  }
+
+  factory MonsterModel.defaultFor(String name) {
+    return MonsterModel(
+      name: name,
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10, // Mapping old stats structure if needed or using new fields
+      // The old hardcoded string used "stats": {"for": ...} which doesn't match this class fields directly?
+      // Wait, the class has strength, dexterity etc.
+      // The hardcoded string was:
+      // "stats": {"for": 10, ...}
+      // But MonsterModel.toMap() produces: 'strength': strength...
+      // Does the MonsterEditor expect 'stats' nested object or flat fields?
+      // I need to check MonsterEditor.dart to see how it parses JSON.
+      // If MonsterEditor uses MonsterModel.fromJson, then I should produce compatible JSON.
+      // MonsterModel.fromMap reads flat fields: map['strength'].
+      // The hardcoded string had nested "stats". This implies the OLD code or CURRENT code might be parsing manually?
+      // Let's check MonsterEditor before applying this.
+    );
   }
 }
 

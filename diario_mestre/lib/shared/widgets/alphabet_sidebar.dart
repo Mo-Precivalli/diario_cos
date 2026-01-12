@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/providers/library_provider.dart';
 import 'package:diario_mestre/core/theme/colors.dart';
 
 class AlphabetSidebar extends StatelessWidget {
@@ -9,7 +9,7 @@ class AlphabetSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NotebookProvider>(
+    return Consumer<LibraryProvider>(
       builder: (context, provider, child) {
         // Only show if active tab is Monsters (Bestiário)
         if (provider.activeTab?.id != 'monsters') {

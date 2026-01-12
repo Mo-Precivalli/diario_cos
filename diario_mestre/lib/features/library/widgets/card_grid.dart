@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:diario_mestre/features/notebook/models/notebook_page.dart';
-import 'package:diario_mestre/providers/notebook_provider.dart';
+import 'package:diario_mestre/providers/library_provider.dart';
 import 'package:diario_mestre/core/theme/colors.dart';
 import 'flip_card.dart';
 
@@ -14,7 +14,7 @@ class CardGrid extends StatelessWidget {
 
   Future<void> _addNewCard(
     BuildContext context,
-    NotebookProvider provider,
+    LibraryProvider library,
   ) async {
     // 1. Pick Image
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -31,29 +31,44 @@ class CardGrid extends StatelessWidget {
       // 3. Create Card Page
       final newPage = NotebookPage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        tabId: provider.activeTab!.id,
+        tabId: library.activeTab!.id,
         title: defaultTitle,
         content: jsonEncode({
           'imagePath': imagePath,
           'description': '',
-          'type': provider.activeTab!.id == 'spells' ? 'spell' : 'item',
+          'type': library.activeTab!.id == 'spells' ? 'spell' : 'item',
         }),
-        order: provider.pages.length,
+        order: library.pages.length,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      await provider.createPageFromObject(newPage);
+      // Use library.createPage or update logic. Library doesn't have createPageFromObject?
+      // createPage in LibraryProvider takes just title.
+      // We need to implement createPageFromObject or update logic.
+      // Actually LibraryProvider.createPage logic:
+      /*
+      final newPage = NotebookPage(...)
+      await _repository.createPage(newPage);
+      _pages.add(newPage);
+      */
+      // But LibraryProvider doesn't expose `createPageFromObject`.
+      // It has `createPage(String title)`.
+      // We should use library.repository.createPage() then reload/add?
+      // Or add `createPageFromObject` to LibraryProvider.
+      // The latter is cleaner.
+      // For now, let's assume I'll add `createPageFromObject` to Library.
+      await library.createPageFromObject(newPage);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NotebookProvider>(
-      builder: (context, provider, child) {
+    return Consumer<LibraryProvider>(
+      builder: (context, library, child) {
         // Filter and Sort Pages Alphabetically
         final pages =
-            provider.filteredPages; // Already filtered by Sidebar if selected
+            library.filteredPages; // Already filtered by Sidebar if selected
         pages.sort(
           (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
         );
@@ -70,8 +85,8 @@ class CardGrid extends StatelessWidget {
               child: pages.isEmpty
                   ? Center(
                       child: Text(
-                        provider.selectedLetter != null
-                            ? "Nenhuma carta com a letra '${provider.selectedLetter}'"
+                        library.selectedLetter != null
+                            ? "Nenhuma carta com a letra '${library.selectedLetter}'"
                             : "Adicione sua primeira carta clicando no '+'",
                         style: const TextStyle(
                           color: AppColors.textLight,
@@ -95,9 +110,9 @@ class CardGrid extends StatelessWidget {
                           key: ValueKey(page.id),
                           page: page,
                           onSave: (updatedPage) =>
-                              provider.updatePage(updatedPage),
+                              library.updatePage(updatedPage),
                           onDelete: () =>
-                              _confirmDelete(context, provider, page),
+                              _confirmDelete(context, library, page),
                         );
                       },
                     ),
@@ -108,7 +123,7 @@ class CardGrid extends StatelessWidget {
               top: 16,
               right: 16,
               child: FloatingActionButton(
-                onPressed: () => _addNewCard(context, provider),
+                onPressed: () => _addNewCard(context, library),
                 backgroundColor: AppColors.accentGold,
                 tooltip: 'Adicionar Nova Carta',
                 child: const Icon(Icons.add, color: Colors.white),
@@ -122,7 +137,7 @@ class CardGrid extends StatelessWidget {
 
   void _confirmDelete(
     BuildContext context,
-    NotebookProvider provider,
+    LibraryProvider library,
     NotebookPage page,
   ) {
     showDialog(
@@ -141,7 +156,7 @@ class CardGrid extends StatelessWidget {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await provider.deletePage(page.id);
+              await library.deletePage(page.id);
             },
             child: const Text('Excluir', style: TextStyle(color: Colors.red)),
           ),

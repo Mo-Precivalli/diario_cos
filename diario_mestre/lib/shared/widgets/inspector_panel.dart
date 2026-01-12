@@ -120,6 +120,7 @@ class _InspectorPanelState extends State<InspectorPanel>
                         Icons.close,
                         color: AppColors.primaryBlue,
                       ), // Matches header text
+                      tooltip: 'Fechar',
                       onPressed: () {
                         // debugPrint('Close button pressed');
                         _controller.reverse().then((_) => widget.onClose());
